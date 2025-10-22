@@ -1,0 +1,54 @@
+name: Task
+description: Create a task for project work
+title: "[TASK] "
+labels: ["task"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for creating a new task!
+  - type: textarea
+    id: task-description
+    attributes:
+      label: Task Description
+      description: A clear and concise description of the task to be completed.
+      placeholder: Describe what needs to be done...
+    validations:
+      required: true
+  - type: checkboxes
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What needs to be completed for this task to be considered done?
+      options:
+        - label: "Define specific criteria here"
+          required: false
+        - label: "Add additional criteria as needed"
+          required: false
+        - label: "Mark completed when done"
+          required: false
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this task?
+      options:
+        - High
+        - Medium
+        - Low
+      default: 1
+    validations:
+      required: true
+  - type: input
+    id: estimated-time
+    attributes:
+      label: Estimated Time
+      description: How long do you think this task will take?
+      placeholder: "e.g., 2 hours, 1 day, 1 week"
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Notes
+      description: Any additional information or context about this task.
+      placeholder: Any other relevant information...
