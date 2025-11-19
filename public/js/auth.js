@@ -191,7 +191,7 @@ class AuthManager {
                 
                 // Show success message
                 if (window.heartTrackApp) {
-                    window.heartTrackApp.showNotification('Account created successfully!', 'success');
+                    window.heartTrackApp.showNotification('Account created successfully!', 'success')
                 }
                 
                 // Redirect to dashboard

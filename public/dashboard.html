@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/charts.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/chart.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -82,6 +82,28 @@
                     </div>
                 </div>
             </div>
+
+            <section class="card">
+                <h2>Recent Measurements</h2>
+                <p class="section-subtitle">
+                    Latest heart rate and SpO₂ readings from your registered devices.
+                </p>
+                <div class="table-wrapper">
+                    <table id="measurements-table">
+                    <thead>
+                        <tr>
+                        <th>Time</th>
+                        <th>Device ID</th>
+                        <th>Heart Rate (BPM)</th>
+                        <th>SpO₂ (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filled by JS -->
+                    </tbody>
+                    </table>
+                </div>
+            </section>
 
             <!-- Main Dashboard Grid -->
             <div class="dashboard-grid">
@@ -245,8 +267,15 @@
         </div>
     </footer>
 
+    <!-- Auth + API -->
+    <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
+
+    <!-- Charts + general UI -->
     <script src="js/charts.js"></script>
     <script src="js/main.js"></script>
+
+    <!-- Dashboard-specific logic -->
+    <script src="js/dashboard.js"></script>
 </body>
 </html>

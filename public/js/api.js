@@ -17,13 +17,13 @@ class APIManager {
 
     setupInterceptors() {
         // Add authentication headers to all requests
-        this.originalFetch = window.fetch;
+        this.originalFetch = window.fetch.bind(window);
         window.fetch = async (url, options = {}) => {
             // Add auth headers if available
             if (this.authManager && this.authManager.isAuthenticated()) {
                 const headers = this.authManager.getAuthHeaders();
                 options.headers = {
-                    ...options.headers,
+                    ...(options.headers || {}),
                     ...headers
                 };
             }
@@ -45,7 +45,12 @@ class APIManager {
     }
 
     handleUnauthorized() {
-        if (this.authManager) {
+        // DO NOT auto-logout immediately
+        console.warn("Received 401 Unauthorized — NOT auto-logging out.");
+
+        // Optionally: only log out if token truly missing
+        if (!this.authManager || !this.authManager.getToken()) {
+            console.warn("Token missing — logging out.");
             this.authManager.logout();
         }
     }
@@ -145,6 +150,19 @@ class APIManager {
 
         return this.handleResponse(response);
     }
+
+    async addMeasurementFromDevice(measurementData) {
+        const response = await fetch(`${this.baseUrl}/measurements/device`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(measurementData)
+        });
+
+        return this.handleResponse(response);
+    }
+
 
     async getWeeklySummary() {
         const response = await fetch(`${this.baseUrl}/measurements/weekly`, {
