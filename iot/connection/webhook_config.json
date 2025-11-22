@@ -1,0 +1,26 @@
+{
+    "name": "ECE413Proj",
+    "event": "health_data",
+    "responseTopic": "hook-response/health_data",
+    "parameters": [],
+    "secrets": [],
+    "template": "webhook",
+    "url": "https://large-vans-sell.loca.lt/api/measurements/device",
+    "requestType": "POST",
+    "noDefaults": true,
+    "rejectUnauthorized": false,
+    "responseTemplate": "",
+    "unchunked": false,
+    "data_url_response_event": false,
+    "headers": {
+        "X-API-Key": "dev-device-key-123",
+        "User-Agent": "Particle-Webhook-Bypass",
+        "Content-Type": "application/json"
+    },
+    "json": {
+        "deviceId": "PHOTON_TEST_001",
+        "heartRate": "{{split PARTICLE_EVENT_VALUE ',' 0}}",
+        "spo2": "{{split PARTICLE_EVENT_VALUE ',' 1}}",
+        "takenAt": "{{{PARTICLE_PUBLISHED_AT}}}"
+    }
+}
