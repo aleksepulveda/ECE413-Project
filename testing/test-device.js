@@ -11,6 +11,10 @@ const BASE_URL = 'http://localhost:3000';  // Change this to your server URL
 const API_KEY = 'dev-device-key-123';      // Must match server's IOT_API_KEY
 const DEVICE_ID = 'PHOTON_TEST_001';       // Your test device ID
 
+// Test user credentials (created by setup-test-device.js)
+const TEST_USER_EMAIL = 'test@example.com';
+const TEST_USER_PASSWORD = 'TestPassword123!';
+
 // Test data samples
 const testMeasurements = [
   { heartRate: 72, spo2: 98 },
@@ -71,6 +75,43 @@ function makeRequest(url, options, data = null) {
 
     req.end();
   });
+}
+
+/**
+ * Login and get JWT token
+ */
+async function loginUser(email, password) {
+  const url = `${BASE_URL}/api/auth/login`;
+  
+  const payload = {
+    email: email,
+    password: password,
+  };
+
+  console.log(`\n🔐 Logging in as ${email}...`);
+
+  try {
+    const response = await makeRequest(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }, payload);
+
+    if (response.statusCode === 200) {
+      const token = response.body.token;
+      console.log(`   ✅ Login successful!`);
+      console.log(`   Token: ${token ? token.substring(0, 20) + '...' : 'No token received'}`);
+      return token;
+    } else {
+      console.log(`   ❌ Login failed! Status: ${response.statusCode}`);
+      console.log(`   Response:`, response.body);
+      return null;
+    }
+  } catch (error) {
+    console.log(`   ❌ Request failed:`, error.message);
+    return null;
+  }
 }
 
 /**
@@ -166,7 +207,8 @@ async function testPostSingle() {
   console.log('TEST 1: Single Measurement POST');
   console.log('='.repeat(60));
   
-  await postMeasurement(DEVICE_ID, 72, 98);
+  const result = await postMeasurement(DEVICE_ID, 72, 98);
+  return ['TEST 1: Single Measurement POST', result];
 }
 
 /**
@@ -194,6 +236,8 @@ async function testPostMultiple() {
   }
   
   console.log(`\n✅ Successfully posted ${successCount}/${testMeasurements.length} measurements`);
+  const passed = successCount === testMeasurements.length;
+  return ['TEST 2: Multiple Measurements POST', passed];
 }
 
 /**
@@ -224,8 +268,10 @@ async function testInvalidApiKey() {
 
   if (response.statusCode === 401) {
     console.log(`   ✅ Correctly rejected! Status: ${response.statusCode}`);
+    return ['TEST 3: Invalid API Key', true];
   } else {
     console.log(`   ❌ Unexpected response! Status: ${response.statusCode}`);
+    return ['TEST 3: Invalid API Key', false];
   }
 }
 
@@ -258,8 +304,10 @@ async function testMissingFields() {
   if (response.statusCode === 400) {
     console.log(`   ✅ Correctly rejected! Status: ${response.statusCode}`);
     console.log(`   Response:`, response.body);
+    return ['TEST 4: Missing Required Fields', true];
   } else {
     console.log(`   ❌ Unexpected response! Status: ${response.statusCode}`);
+    return ['TEST 4: Missing Required Fields', false];
   }
 }
 
@@ -271,7 +319,38 @@ async function testGetWithoutAuth() {
   console.log('TEST 5: GET without Authentication (should fail)');
   console.log('='.repeat(60));
   
-  await getMeasurements();
+  const result = await getMeasurements();
+  // Should return null (401 error) to pass this test
+  const passed = result === null;
+  return ['TEST 5: GET without Authentication', passed];
+}
+
+/**
+ * Test GET with valid JWT token (should succeed)
+ */
+async function testGetWithAuth() {
+  console.log('\n' + '='.repeat(60));
+  console.log('TEST 6: GET with Valid JWT Token (should succeed)');
+  console.log('='.repeat(60));
+  
+  // Login to get token
+  const token = await loginUser(TEST_USER_EMAIL, TEST_USER_PASSWORD);
+  
+  if (!token) {
+    console.log('   ❌ Cannot test - login failed');
+    return ['TEST 6: GET with Valid JWT Token', false];
+  }
+  
+  // Use token to get measurements
+  const measurements = await getMeasurements(token);
+  
+  if (measurements !== null) {
+    console.log('   ✅ Successfully retrieved measurements with JWT token');
+    return ['TEST 6: GET with Valid JWT Token', true];
+  } else {
+    console.log('   ❌ Failed to retrieve measurements');
+    return ['TEST 6: GET with Valid JWT Token', false];
+  }
 }
 
 /**
@@ -295,14 +374,45 @@ async function runAllTests() {
     return;
   }
 
-  await testPostSingle();
-  await testPostMultiple();
-  await testInvalidApiKey();
-  await testMissingFields();
-  await testGetWithoutAuth();
+  // Run all tests and collect results
+  const results = [];
+  results.push(await testPostSingle());
+  results.push(await testPostMultiple());
+  results.push(await testInvalidApiKey());
+  results.push(await testMissingFields());
+  results.push(await testGetWithoutAuth());
+  results.push(await testGetWithAuth());
 
+  // Summary
   console.log('\n' + '='.repeat(60));
-  console.log('✅ All tests completed!');
+  console.log('TEST SUMMARY');
+  console.log('='.repeat(60));
+  
+  const passedTests = [];
+  const failedTests = [];
+  
+  results.forEach(([testName, passed]) => {
+    if (passed) {
+      passedTests.push(testName);
+      console.log(`✅ ${testName}`);
+    } else {
+      failedTests.push(testName);
+      console.log(`❌ ${testName}`);
+    }
+  });
+  
+  console.log('\n' + '='.repeat(60));
+  console.log(`Total: ${results.length} tests | Passed: ${passedTests.length} | Failed: ${failedTests.length}`);
+  
+  if (failedTests.length > 0) {
+    console.log('\n❌ FAILED TESTS:');
+    failedTests.forEach(testName => {
+      console.log(`   - ${testName}`);
+    });
+  } else {
+    console.log('\n🎉 All tests passed!');
+  }
+  
   console.log('='.repeat(60));
 }
 
@@ -320,6 +430,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  loginUser,
   postMeasurement,
   getMeasurements,
   testPostSingle,
@@ -327,5 +438,6 @@ module.exports = {
   testInvalidApiKey,
   testMissingFields,
   testGetWithoutAuth,
+  testGetWithAuth,
   runAllTests,
 };
