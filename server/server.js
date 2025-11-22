@@ -61,7 +61,9 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/devices', authMiddleware, deviceRoutes);
-app.use('/api/measurements', authMiddleware, measurementRoutes);
+// Note: /api/measurements has mixed auth - some routes use JWT, some use API key
+// So we apply auth inside the route handlers, not globally here
+app.use('/api/measurements', measurementRoutes);
 // app.use('/api/users', authMiddleware, userRoutes);
 
 // Fallback: serve index.html for any non-API route
