@@ -1,3 +1,4 @@
+
 // SYSTEM_MODE(AUTOMATIC);
 SYSTEM_THREAD(ENABLED); //uncomment to use w/out wifi
 
@@ -8,7 +9,7 @@ float beatsPerMinute;
 MAX30105 particleSensor;
 
 void handle(const char *event, const char *data){
-    
+
 }
 int led = D7;  // The on-board LED
 
@@ -17,8 +18,8 @@ void setup()
     Serial.begin(9600);
     Serial.println("Initializing...");
 
-    //Testing the connection to Particle Webhooks
-    Particle.publish("activity", "75", "PRIVATE");
+    //subscriptions to Particle Webhooks
+    Particle.subscribe("hook-response/bpm", handle, MY_DEVICES);
 
     // Initialize sensor
     if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) //Use default I2C port, 400kHz speed

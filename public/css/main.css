@@ -104,6 +104,10 @@ a {
     transition: color var(--transition-fast);
 }
 
+th, td {
+    padding: 4px;
+}
+
 a:hover {
     color: var(--primary-dark);
 }
