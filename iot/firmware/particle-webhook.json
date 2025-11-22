@@ -1,0 +1,18 @@
+{
+  "event": "activity",
+  "url": "https://your-server-url.com/api/measurements/device",
+  "requestType": "POST",
+  "noDefaults": true,
+  "rejectUnauthorized": true,
+  "headers": {
+    "X-API-Key": "dev-device-key-123",
+    "Content-Type": "application/json"
+  },
+  "json": {
+    "deviceId": "{{PARTICLE_DEVICE_ID}}",
+    "heartRate": "{{PARTICLE_EVENT_VALUE}}",
+    "spo2": 98,
+    "takenAt": "{{PARTICLE_PUBLISHED_AT}}"
+  },
+  "responseTemplate": "{{status}}"
+}
