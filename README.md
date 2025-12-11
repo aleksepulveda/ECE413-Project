@@ -9,202 +9,247 @@ Heart Track is a low-cost IoT-enabled web application for monitoring heart rate 
 - **Server**: Node.js/Express backend with MongoDB database
 - **Real-time Monitoring**: Configurable measurement intervals and time ranges
 
+The system provides daily and weekly data summaries, device management, secure authentication, and real-time chart visualizations.
+
 ## Project Structure
 
 ```
-ece_513_project_demo/
-├── README.md                           # This file
-├── package.json                        # Node.js dependencies
-├── .gitignore                         # Git ignore rules
-├── public/                            # Frontend web application
-│   ├── index.html                     # Main landing page
-│   ├── login.html                     # User login page
-│   ├── dashboard.html                 # Main dashboard
-│   ├── weekly-summary.html            # Weekly summary view
-│   ├── daily-detail.html              # Daily detailed view
-│   ├── device-management.html         # Device management
-│   ├── settings.html                  # User settings
-│   ├── reference.html                 # Third-party references
-│   ├── css/                          # Stylesheets
-│   │   ├── main.css                  # Main styles
-│   │   ├── responsive.css             # Responsive design
-│   │   └── charts.css                # Chart-specific styles
-│   ├── js/                           # JavaScript modules
-│   │   ├── main.js                   # Main application logic
-│   │   ├── auth.js                   # Authentication handling
-│   │   ├── charts.js                 # Chart functionality
-│   │   ├── api.js                    # API communication
-│   │   └── utils.js                  # Utility functions
-│   └── images/                       # Static images
-├── server/                           # Backend server
-│   ├── app.js                        # Express app setup
-│   ├── server.js                     # Server entry point
-│   ├── config/                       # Configuration
-│   │   └── database.js               # MongoDB connection
-│   ├── routes/                       # API routes
-│   │   ├── auth.js                   # Authentication routes
-│   │   ├── devices.js                # Device management routes
-│   │   ├── measurements.js           # Measurement data routes
-│   │   └── users.js                  # User management routes
-│   ├── models/                       # Database models
-│   │   ├── User.js                   # User model
-│   │   ├── Device.js                 # Device model
-│   │   └── Measurement.js            # Measurement model
-│   └── middleware/                   # Custom middleware
-│       ├── auth.js                   # Authentication middleware
-│       └── validation.js            # Input validation
-├── iot/                              # IoT device code
-│   ├── firmware/                     # Particle Photon firmware
-│   │   ├── heart_track.ino           # Main firmware file
-│   │   ├── sensor_handler.cpp        # Sensor management
-│   │   └── wifi_manager.cpp          # WiFi connectivity
-│   └── README.md                     # IoT setup instructions
-└── docs/                             # Documentation
-    ├── api.md                        # API documentation
-    ├── setup.md                      # Setup instructions
-    ├── hardware.md                   # Hardware requirements
-    └── deployment.md                 # Deployment guide
+Project Structure
+HeartTrack/
+│
+├── README.md                 # Project documentation
+├── package.json              # Node.js dependencies
+├── .gitignore                # Git ignore rules
+│
+├── public/                   # Frontend web application
+│   ├── index.html            # Team introduction & project overview
+│   ├── login.html            # Login and registration
+│   ├── dashboard.html        # Recent measurements dashboard
+│   ├── weekly-summary.html   # 7-day summary and chart
+│   ├── daily-detail.html     # Detailed daily chart & timeline
+│   ├── device-management.html# Device add/remove UI
+│   ├── settings.html         # Local measurement preferences
+│   ├── reference.html        # Third-party APIs & libraries
+│   │
+│   ├── css/                  # Stylesheets
+│   └── js/                   # Client-side JavaScript logic
+│
+├── server/                   # Backend (Node.js + Express)
+│   ├── server.js             # Server entry point
+│   │
+│   ├── config/
+│   │   └── database.js       # MongoDB connection
+│   │
+│   ├── middleware/
+│   │   ├── auth.js           # JWT authentication
+│   │   ├── deviceApiKey.js   # IoT API key validation
+│   │   └── errorHandler.js   # Error handling
+│   │
+│   ├── models/
+│   │   ├── User.js           # User accounts
+│   │   ├── Device.js         # Registered IoT devices
+│   │   └── Measurement.js    # Stored measurements
+│   │
+│   └── routes/
+│       ├── auth.js           # Registration & login
+│       ├── devices.js        # Device CRUD
+│       └── measurements.js   # Measurement ingestion & summaries
+│
+└── .env                      # Environment variables (local only)
 ```
 
-## Getting Started
+## Team Members
+| Name  | Email  | Role |
+| ------------- |:-------------:|:-------------:|
+|Alek Sepulveda	| aleksepulveda@arizona.edu	| AWS integration / Backend |
+|Darryl Mercado	| darrylmercado@arizona.edu	| IoT device development |
+|Elias Vazquez	| eliasvazquez@arizona.edu | Frontend & system integration |
 
-### Prerequisites
+The team introduction with photos and descriptions are shown on index.html.
 
-- Node.js 16+ and npm
-- MongoDB (local or cloud)
-- Particle Photon development board
-- MAX30102 sensor module
-- Basic electronics components (breadboard, jumper wires)
+## Features
+### Authentication and Account Management
 
-### Installation
+* Create an account using email + strong password
+* Login/logout using secure JWT authentication
+* Update user profile (email excluded per requirements)
+* Persistent session handling
+* Add/remove devices from the user account
 
-1. Clone this repository:
-   ```bash
-   git clone <your-repository-url>
-   cd ece_513_project_demo
-   ```
+### Web Application Interface
+* Fully responsive for desktop, tablet, and mobile
+* Navigation menu on every page
+* Chart.js visualizations
+* Data filtering and dynamic updates
 
-2. Install server dependencies:
-   ```bash
-   npm install
-   ```
+### Dashboard
+* Displays most recent measurements
+* Time-range selector: Today, This Week, This Month
+* Active device count
+* Summary cards for heart rate and SpO₂
 
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your MongoDB URI and JWT secret
-   ```
+### Weekly Summary View
+* Computes:
+    * Average HR
+    * Average SpO₂
+    * Total measurements
+    * Active device count
+    * Daily min/max/avg values
+* Weekly line chart with seven-day window
+* Dropdown for selecting weekly range (future-proofed)
 
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### Daily Detail View
+* Select any day from calendar input
+* Displays:
+    * Minimum, maximum, and average HR
+    * Measurement times
+    * Device count
+* Timeline table for all readings
+* Two separate charts:
+    * Heart Rate
+    * SpO₂
+* Minimum values highlighted in green
+* Maximum values highlighted in red
+* Time-of-day shown on horizontal axis
 
-5. Open your browser and navigate to `http://localhost:3000`
+### Device Management
+* Add new Heart Track devices
+* Remove existing devices
+* Displays all registered devices
+* Protected by JWT authentication
 
-### Hardware Setup
+### Settings Page
+Stores client-side preferences including:
+* Measurement frequency
+* Notification behavior
+* Start/End time-of-day range (default 06:00–22:00)
+Preferences are saved in localStorage.
 
-1. Connect the MAX30102 sensor to Particle Photon
-2. Upload the firmware from `iot/firmware/`
-3. Configure WiFi credentials in the firmware
-4. Register the device through the web application
+### Server Overview (Node.js + Express + MongoDB)
+#### Technologies Used
+* Express.js
+* MongoDB with Mongoose
+* JWT Authentication
+* bcryptjs password hashing
+* Helmet, CORS, and API rate limiting
 
-## Key Features
+### API Key Enforcement
+All IoT devices must send readings using:
+```
+X-API-Key: <DEVICE_API_KEY>
+```
+The server rejects measurement uploads without this key.
 
-### Web Application
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **User Authentication**: Secure login with JWT tokens
-- **Device Management**: Add/remove multiple devices
-- **Data Visualization**: Interactive charts for heart rate and blood oxygen
-- **Weekly Summary**: Average, min, max heart rate over 7 days
-- **Daily Detail**: Hourly charts with min/max indicators
-- **Configurable Settings**: Customizable measurement intervals and time ranges
+### API Endpoints
+#### Authentication Routes
+| Method  | Route  | Description |
+| ------------- |:-------------:|:-------------:|
+| POST | /api/auth/register | Register new user |
+| POST | /api/auth/login | Login and receive JWT |
 
-### IoT Device
-- **Real-time Monitoring**: Configurable measurement requests
-- **LED Indicators**: Blue (request), Green (success), Yellow (offline)
-- **Offline Storage**: 24-hour local data storage
-- **WiFi Connectivity**: Automatic data sync when connected
-- **State Machine**: Synchronous operation for reliability
+#### Device Routes
 
-### Server
-- **RESTful API**: Well-documented endpoints
-- **Token Authentication**: Secure API access
-- **MongoDB Integration**: Scalable data storage
-- **Error Handling**: Proper HTTP status codes
-- **Data Validation**: Input sanitization and validation
+(Requires JWT)
+| Method  | Route  | Description |
+| ------------- |:-------------:|:-------------:|
+| GET | /api/devices | Get all user devices |
+| POST | /api/devices | Register new device |
+| DELETE | /api/devices/:deviceId | Remove device |
 
-## API Endpoints
+#### Measurement Routes
+| Method  | Route  | Description |
+| ------------- |:-------------:|:-------------:|
+| POST | /api/measurements/device | Photon uploads HR + SpO₂ (with API key) |
+| GET | /api/measurements | List recent measurements |
+| GET | /api/measurements/weekly | Weekly summary (7-day window) |
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-
-### Devices
-- `GET /api/devices` - Get user devices
-- `POST /api/devices` - Register new device
-- `PUT /api/devices/:id` - Update device settings
-- `DELETE /api/devices/:id` - Remove device
-
-### Measurements
-- `GET /api/measurements` - Get measurement data
-- `POST /api/measurements` - Submit new measurement
-- `GET /api/measurements/weekly` - Get weekly summary
-- `GET /api/measurements/daily/:date` - Get daily details
-
-## Project Requirements
-
-This project fulfills the requirements outlined in:
-- `ECE_413_513_Final_Project_Description (2025)_v1 (1).docx`
-
-### Core Requirements Met
-- ✅ Responsive web application with navigation
-- ✅ User account creation and management
-- ✅ Device registration and management
-- ✅ Node.js/Express/MongoDB backend
-- ✅ RESTful API with proper documentation
-- ✅ Token-based authentication
-- ✅ Weekly summary and daily detail views
-- ✅ Interactive charts with time-based data
-- ✅ Configurable measurement settings
-- ✅ IoT device with LED indicators
-- ✅ Offline data storage capability
-- ✅ Synchronous state machine implementation
-
-## Development
-
-### Running Tests
-```bash
-npm test
+### Installation and Local Setup
+1. Install Node.js Dependencies
+```
+npm install
 ```
 
-### Building for Production
-```bash
-npm run build
+2. Configure Environment Variables
+
+Create a .env file:
+```
+PORT=3000
+NODE_ENV=development
+MONGODB_URI=mongodb://127.0.0.1:27017/hearttrack
+JWT_SECRET=my_super_secret_key
+DEVICE_API_KEY=dev-device-key-123
 ```
 
-### Linting
-```bash
-npm run lint
+3. Start MongoDB
+```
+mongod
 ```
 
-## Deployment
+4. Run the Server
+```
+npm start
+```
 
-1. Set up MongoDB Atlas or local MongoDB instance
-2. Configure environment variables for production
-3. Deploy server to cloud platform (Heroku, AWS, etc.)
-4. Update IoT device firmware with production server URL
-5. Test end-to-end functionality
+Application will run at:
+```
+http://localhost:3000
+```
 
-## Third-Party Libraries and APIs
+### Testing the IoT Endpoint (Postman)
+#### POST Measurement Upload
+```
+POST /api/measurements/device
+```
 
-See `public/reference.html` for a complete list of third-party libraries, APIs, and code used in this project.
+Headers:
+```
+X-API-Key: dev-device-key-123
+Content-Type: application/json
+```
 
-## License
+Body:
+```
+{
+  "deviceId": "PHOTON_TEST_01",
+  "heartRate": 82,
+  "spo2": 98
+}
+```
 
-This project is created for educational purposes in ECE 413/513 courses at the University of Arizona.
+Expected Response:
+* 201 Created if the API key is correct
+* 401 Unauthorized if the API key is missing/wrong
 
----
+### IoT Device Summary (Photon + MAX30102)
 
-**Note**: This is a template project structure. Please customize it according to your specific implementation and remove this note when submitting your final project.
+The Photon device implementation (submitted separately with code) includes:
+* Blue LED prompting user to take measurement
+* Green LED when data successfully saved to server
+* Yellow LED when stored offline
+* Local buffer for storing up to 24 hours when offline
+* Synchronous state machine implementation
+* Uploads data using API key authentication
+* Sends data only within configured time window (default 6AM–10PM)
+
+### Third-Party Libraries & References
+A full list is provided in reference.html, including:
+* Chart.js
+* Google Fonts
+* Open-source CSS snippets
+* Reusable JavaScript utilities from class materials
+
+### Notes for ECE 513 Students (if applicable)
+If physician-role login credentials are required, they should be documented here.
+
+### Conclusion
+This repository contains the complete implementation of the Heart Track system, including:
+* Front-end web application
+* Secure Node.js/Express backend
+* MongoDB database logic
+* JWT authentication
+* IoT device ingestion endpoint with API key validation
+* Daily and weekly visualization views
+* Responsive design
+* Full documentation (this README.md)
+
+All course requirements are satisfied.
