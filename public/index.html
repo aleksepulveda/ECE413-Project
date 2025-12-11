@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heart Track - Heart Rate Monitoring System</title>
     <meta name="description" content="IoT-enabled heart rate and blood oxygen monitoring system">
+    
+    <!-- Shared styles -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,14 +14,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Top Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
                 <h2>❤️ Heart Track</h2>
             </div>
             <div class="nav-menu" id="nav-menu">
-                <a href="index.html" class="nav-link active">Home</a>
+                <a href="index.html" class="nav-link active">Home</a>   <!-- acitve -->
                 <a href="login.html" class="nav-link">Login</a>
                 <a href="dashboard.html" class="nav-link">Dashboard</a>
                 <a href="reference.html" class="nav-link">References</a>
@@ -141,21 +143,48 @@
             <h2 class="section-title">Our Team</h2>
             <div class="team-content">
                 <p class="team-description">
-                    This project is developed as part of the ECE 413/513 course at the University of Arizona. 
-                    Our team is dedicated to creating innovative IoT solutions for healthcare monitoring.
+                    This project was developed as part of the ECE 413/513 course at the University of Arizona.
+                    Our team collaborated across hardware, software, and cloud components
+                    to deliver a functionally working IoT heart-rate monitoring system.
                 </p>
+                <ul class="team-list">
+                    <li>
+                        <strong>Alek Sepulveda</strong> —
+                        <a href="mailto:aleksepulveda@arizona.edu">aleksepulveda@arizona.edu</a> —
+                        AWS Infrastructure & Cloud Integration
+                    </li>
+                    <li>
+                        <strong>Darryl Mercado</strong> —
+                        <a href="mailto:darrylmercado@arizona.edu">darrylmercado@arizona.edu</a> —
+                        IoT Firmware Development (Particle Photon)
+                    </li>
+                    <li>
+                        <strong>Elias Vazquez</strong> —
+                        <a href="mailto:elilasvazquez@arizona.edu">elilasvazquez@arizona.edu</a> —
+                        Front-End Development & API Integration
+                    </li>
+                </ul>
+                <!-- Team Photo Row -->
+                <div class="team-photos">
+                    <img src="images/alek.jpg" alt="Alek's photo">
+                    <img src="images/darryl.jpg" alt="Darryl's photo">
+                    <img src="images/elias.jpg" alt="Elias's photo">
+                </div>
+
                 <div class="course-info">
                     <h3>Course Information</h3>
                     <ul>
-                        <li><strong>Course:</strong> ECE 413/513</li>
-                        <li><strong>Project:</strong> Heart Rate Monitoring System</li>
+                        <li><strong>Course:</strong> ECE 413/513 — Internet of Things (IoT)</li>
+                        <li><strong>Project:</strong> Heart Track — IoT Heart Rate Monitoring System</li>
+                        <li><strong>Instructor:</strong> Dr. Soheil Salehi</li>
                         <li><strong>Due Date:</strong> December 15, 2025</li>
-                        <li><strong>Technology Stack:</strong> Node.js, Express, MongoDB, HTML5, CSS3, JavaScript</li>
+                        <li><strong>Technology Stack:</strong> Particle Photon, Node.js, Express, MongoDB, HTML5, CSS3, JavaScript, Chart.js</li>
                     </ul>
                 </div>
             </div>
         </div>
     </section>
+
 
     <!-- Footer -->
     <footer class="footer">
@@ -168,8 +197,8 @@
                 <div class="footer-section">
                     <h4>Quick Links</h4>
                     <ul>
+                        <li><a href="index.html">Home</a></li>
                         <li><a href="login.html">Login</a></li>
-                        <li><a href="dashboard.html">Dashboard</a></li>
                         <li><a href="reference.html">References</a></li>
                     </ul>
                 </div>
@@ -188,6 +217,7 @@
         </div>
     </footer>
 
+    <!-- Script (this one just needs the 1) -->
     <script src="js/main.js"></script>
 </body>
 </html>

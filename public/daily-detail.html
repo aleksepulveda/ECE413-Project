@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Detail - Heart Track</title>
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/charts.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Local Chart.js bundle (no CDN due to issues / errors) -->
+  <script src="js/chart.js"></script>
+</head>
+<body>
+  <!-- Top Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <h2>❤️ Heart Track</h2>
+      </div>
+      <div class="nav-menu" id="nav-menu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="login.html" class="nav-link">Login</a>
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="weekly-summary.html" class="nav-link">Weekly Summary</a>
+        <a href="daily-detail.html" class="nav-link active">Daily Detail</a>  <!-- acitve -->
+        <a href="device-management.html" class="nav-link">Devices</a>
+        <a href="settings.html" class="nav-link">Settings</a>
+        <a href="#" class="nav-link" id="logoutBtn">Logout</a>
+      </div>
+      <div class="nav-toggle" id="nav-toggle">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="container">
+      <!-- Header row: title + date selector -->
+      <div class="dashboard-header">
+        <div>
+          <h1>Daily Detail</h1>
+          <p class="section-subtitle">Explore detailed heart rate and blood oxygen measurements for a single day.</p>
+        </div>
+
+        <!-- Date picker + quick actions, gets updated though daily-detail.js -->
+        <div class="dashboard-actions">
+          <label for="dailyDate" class="form-label" style="margin-right: 12px;">Select date</label>
+          <input type="date" id="dailyDate" class="form-input" aria-label="Select date for detailed measurements">
+          <button class="btn btn-secondary" id="todayBtn" style="margin-left: 12px;">Today</button>
+        </div>
+      </div>
+
+      <!-- Top stats for the selected day, gets updated though daily-detail.js -->
+      <section class="stats-grid">
+        <!-- Min HR -->
+        <div class="stat-card">
+          <div class="stat-icon">📉</div>
+          <div class="stat-content">
+            <h3 id="minHeartRate">--</h3>
+            <p>Minimum Heart Rate (BPM)</p>
+            <span class="stat-trend" id="minHrTime">--</span>
+          </div>
+        </div>
+
+        <!-- Avg HR -->
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <h3 id="avgHeartRate">--</h3>
+            <p>Average Heart Rate (BPM)</p>
+            <span class="stat-trend" id="avgHrInfo">--</span>
+          </div>
+        </div>
+
+        <!-- Max HR -->
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <h3 id="maxHeartRate">--</h3>
+            <p>Maximum Heart Rate (BPM)</p>
+            <span class="stat-trend" id="maxHrTime">--</span>
+          </div>
+        </div>
+
+        <!-- Measurements count -->
+        <div class="stat-card">
+          <div class="stat-icon">🧪</div>
+          <div class="stat-content">
+            <h3 id="measurementsCount">--</h3>
+            <p>Measurements Today</p>
+            <span class="stat-trend" id="measurementsDevices">--</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main grid: chart on the left, table on the right -->
+      <div class="dashboard-grid">
+        <!-- Left: time-series chart -->
+        <section class="dashboard-section">
+          <div class="section-header">
+            <h2>Heart Rate &amp; SpO₂ Over Time</h2>
+            <p class="section-subtitle">Each point is a measurement taken on the selected day.</p>
+          </div>
+
+          <div class="chart-container">
+            <h2>Heart Rate Over Time</h2>
+            <canvas id="dailyHeartChart"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <h2>SpO₂ Over Time</h2>
+            <canvas id="dailySpo2Chart"></canvas>
+          </div>
+          <p class="form-helper-text">Hover over the chart to see the exact time and value for each measurement.</p>
+        </section>
+
+        <!-- Right: detailed table of measurements -->
+        <aside class="dashboard-sidebar">
+          <section class="sidebar-section">
+            <h3>Measurements Timeline</h3>
+            <p class="section-subtitle">Every individual measurement recorded on the selected day.p>
+
+            <div class="table-wrapper">
+              <table id="daily-measurements-table" class="summary-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Device ID</th>
+                    <th>Heart Rate (BPM)</th>
+                    <th>SpO₂ (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Filled dynamically by daily-detail.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <p id="dailyEmptyMessage" class="form-helper-text" style="display:none;">
+              No measurements were found for this date. Try another day orconfirm your device is sending data.
+            </p>
+          </section>
+
+          <!-- small info box for information about the day -->
+          <section class="sidebar-section">
+            <h3>About this day</h3>
+            <p id="dailySummaryText"> Select a date to see your measurements and trends for that day. </p>
+          </section>
+        </aside>
+      </div>
+
+      <!-- Explanation section (similar to Weekly Summary page and others) -->
+      <section class="info-section">
+        <h2>How to interpret this page</h2>
+
+        <div class="info-card info-card--blue">
+          <div class="info-icon">ℹ️</div>
+          <div>
+            <h3>Per-measurement detail</h3>
+            <p>
+              The table on the right lists every measurement taken on the selected day, 
+              including the time, device ID, heart rate, and blood oxygen saturation.
+            </p>
+          </div>
+        </div>
+
+        <div class="info-card info-card--teal">
+          <div class="info-icon">📈</div>
+          <div>
+            <h3>Trends throughout the day</h3>
+            <p>
+              The chart shows how your heart rate and SpO₂ changed over the day. Look for periods where values 
+              stay high or low for an extended time, which might be worth discussing with a healthcare professional.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+      <div class="container">
+          <div class="footer-content">
+              <div class="footer-section">
+                  <h3>Heart Track</h3>
+                  <p>IoT-enabled heart rate monitoring system for ECE 413/513.</p>
+              </div>
+              <div class="footer-section">
+                  <h4>Quick Links</h4>
+                  <ul>
+                      <li><a href="index.html">Home</a></li>
+                      <li><a href="login.html">Login</a></li>
+                      <li><a href="reference.html">References</a></li>
+                  </ul>
+              </div>
+              <div class="footer-section">
+                  <h4>Resources</h4>
+                  <ul>
+                      <li><a href="docs/setup.md">Setup Guide</a></li>
+                      <li><a href="docs/api.md">API Documentation</a></li>
+                      <li><a href="docs/hardware.md">Hardware Guide</a></li>
+                  </ul>
+              </div>
+          </div>
+          <div class="footer-bottom">
+              <p>&copy; 2025 ECE 413/513 Team. Educational project for University of Arizona.</p>
+          </div>
+      </div>
+  </footer>
+
+  <!-- Scripts (Order matters: auth → api → chart helpers → page script) -->
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/daily-detail.js"></script>
+</body>
+</html>

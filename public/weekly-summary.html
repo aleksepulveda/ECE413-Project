@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weekly Summary - Heart Track</title>
+
+    <!-- Shared styles -->
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="css/charts.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+    <!-- Local Chart.js bundle (no CDN due to issues / errors) -->
+    <script src="js/chart.js"></script>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <h2>❤️ Heart Track</h2>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="login.html" class="nav-link">Login</a>
+          <a href="dashboard.html" class="nav-link">Dashboard</a>
+          <a href="weekly-summary.html" class="nav-link active">Weekly Summary</a>  <!-- acitve -->
+          <a href="daily-detail.html" class="nav-link">Daily Detail</a>
+          <a href="device-management.html" class="nav-link">Devices</a>
+          <a href="settings.html" class="nav-link">Settings</a>
+          <a href="#" class="nav-link" id="logoutBtn">Logout</a>
+        </div>
+        <div class="nav-toggle" id="nav-toggle">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="dashboard-main">
+      <div class="container">
+        <!-- Page header -->
+        <div class="dashboard-header">
+          <div>
+            <h1>Weekly Summary</h1>
+            <p class="section-subtitle">Overview of your heart rate and blood oxygen measurements for the past 7 days.</p>
+          </div>
+          <div class="dashboard-actions">
+            <label for="weekSelect" class="form-label">Select week</label>
+            <select id="weekSelect" class="form-select">
+              <option value="this-week" selected>This Week</option>
+              <!-- In the future  previous weeks would go here -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Top stats cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">💓</div>
+            <div class="stat-content">
+              <h3 id="avgHeartRateValue">--</h3>
+              <p>Average Heart Rate (BPM)</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">🫁</div>
+            <div class="stat-content">
+              <h3 id="avgSpo2Value">--</h3>
+              <p>Average SpO₂ (%)</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+              <h3 id="totalMeasurementsValue">--</h3>
+              <p>Total Measurements</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">📱</div>
+            <div class="stat-content">
+              <h3 id="activeDevicesValue">--</h3>
+              <p>Active Devices</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Heart Rate Range Summary -->
+        <section class="card weekly-hr-range-card">
+          <p id="weeklyHrRangeText" class="weekly-hr-range-text">
+            In the last 7 days, your heart rate ranged from
+            <span id="weeklyMinHeartRate">--</span> to
+            <span id="weeklyMaxHeartRate">--</span> BPM.
+          </p>
+        </section>
+
+        <!-- Main grid: chart + table -->
+        <div class="dashboard-grid">
+          <!-- Chart -->
+          <section class="dashboard-section">
+            <div class="section-header">
+              <h2>Weekly Heart Rate &amp; SpO₂</h2>
+              <p class="section-subtitle">
+                Each point represents one day's average values.
+              </p>
+            </div>
+            <div class="chart-container">
+              <canvas id="weeklyHeartRateChart"></canvas>
+            </div>
+          </section>
+
+          <!-- Daily breakdown table -->
+          <aside class="dashboard-sidebar">
+            <div class="sidebar-section">
+              <h3>Daily Breakdown</h3>
+              <p class="section-subtitle">Minimum, maximum, and average measurements for each day of the week</p>
+
+              <div class="table-wrapper">
+                <table class="summary-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Min HR</th>
+                      <th>Max HR</th>
+                      <th>Avg HR</th>
+                      <th>Avg SpO₂</th>
+                      <th>Measurements</th>
+                    </tr>
+                  </thead>
+                  <tbody id="weekly-breakdown-body">
+                    <!-- Filled by weekly-summary.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <!-- Help section -->
+        <section class="card" style="margin-top: 2rem;">
+          <h2>How to interpret this page</h2>
+
+          <div class="info-card info-card--primary">
+            <div class="info-icon">ℹ️</div>
+            <div class="info-content">
+              <h3>Weekly averages</h3>
+              <p>The cards at the top show average values calculated from all measurements collected during the selected week.</p>
+            </div>
+          </div>
+
+          <div class="info-card info-card--secondary">
+            <div class="info-icon">📅</div>
+            <div class="info-content">
+              <h3>Daily breakdown</h3>
+              <p>The chart and table summarize your data per day. This is usefulfor spotting trends like 
+                consistently higher heart rate on busy days or drops in blood oxygen.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Heart Track</h3>
+                    <p>IoT-enabled heart rate monitoring system for ECE 413/513.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="login.html">Login</a></li>
+                        <li><a href="reference.html">References</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="docs/setup.md">Setup Guide</a></li>
+                        <li><a href="docs/api.md">API Documentation</a></li>
+                        <li><a href="docs/hardware.md">Hardware Guide</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ECE 413/513 Team. Educational project for University of Arizona.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts (Order matters: auth → api → chart helpers → page script) -->
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/weekly-summary.js"></script>
+  </body>
+</html>

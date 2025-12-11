@@ -1,80 +1,324 @@
 // public/js/dashboard.js
+// -------------------------------------------------------------
+// Heart Track - Dashboard Page Logic
+// -------------------------------------------------------------
+// This script powers the main Dashboard view. It:
+//   • Loads recent measurements from the backend via apiManager.getMeasurements()
+//   • Filters those measurements by the selected time range
+//     ("today", "week", "month") using <select id="timeRange">
+//   • Updates the stat cards:
+//       - Current Heart Rate
+//       - Blood Oxygen
+//       - Today's Measurements
+//       - Active Devices (via /api/devices)
+//   • Populates the “Recent Measurements” table with newest readings first
+//   • Sends processed data into chartsManager (charts.js) to render
+//     the Heart Rate and Oxygen charts
+//   • Enforces login on this page via authManager (auth.js)
+//   • Gracefully handles empty data sets and API errors
+// -------------------------------------------------------------
 
-console.log('dashboard.js loaded');
+(function () {
+  console.log('dashboard.js loaded');
 
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('DOMContentLoaded fired on dashboard');
+  document.addEventListener('DOMContentLoaded', () => {
+    const apiManager = window.apiManager;
+    const authManager = window.authManager;
+    const chartsManager = window.chartsManager;
 
-  const api = window.apiManager;
-  const auth = window.authManager;
-  const tbody = document.querySelector('#measurements-table tbody');
-
-  console.log('apiManager:', api);
-  console.log('authManager:', auth);
-  console.log('tbody found?', !!tbody);
-
-  // 🔍 NEW debug lines:
-  const token = auth && auth.getToken ? auth.getToken() : null;
-  console.log('auth token from authManager.getToken():', token);
-  console.log('isAuthenticated():', auth && auth.isAuthenticated ? auth.isAuthenticated() : 'no isAuthenticated');
-
-  if (!tbody) {
-    console.error('No #measurements-table tbody found');
-    return;
-  }
-
-  // 🚧 TEMP: do NOT redirect yet, just log
-  if (!auth || !auth.isAuthenticated || !auth.isAuthenticated()) {
-    console.warn('Not authenticated in dashboard (but continuing for debug)');
-    // don't redirect here
-  }
-
-  try {
-    // GET /api/measurements for this user
-    const measurements = await api.getMeasurements(); // use default behavior
-
-    console.log('Loaded measurements from API:', measurements);
-
-    if (!measurements || measurements.length === 0) {
-      const row = document.createElement('tr');
-      const cell = document.createElement('td');
-      cell.colSpan = 4;
-      cell.textContent = 'No measurements yet.';
-      row.appendChild(cell);
-      tbody.appendChild(row);
+    if (!apiManager) {
+      console.warn('Dashboard: apiManager not available; skipping data load.');
       return;
     }
 
-    measurements.forEach(m => {
-      const row = document.createElement('tr');
+    // Optional: enforce login on dashboard
+    if (authManager && typeof authManager.isAuthenticated === 'function') {
+      if (!authManager.isAuthenticated()) {
+        console.warn('Dashboard: user not authenticated, redirecting to login.');
+        window.location.href = 'login.html';
+        return;
+      }
+    }
 
-      const time = new Date(m.takenAt || m.createdAt);
-      const timeCell = document.createElement('td');
-      timeCell.textContent = time.toLocaleString();
+    // ---- Core DOM elements (must exist) ----
+    const rangeSelect = document.getElementById('timeRange'); // <select>
+    const recentTableBody = document.querySelector('#measurements-table tbody');
+    const heartRateCanvas = document.getElementById('heartRateChart');
+    const oxygenCanvas = document.getElementById('oxygenChart');
 
-      const deviceCell = document.createElement('td');
-      deviceCell.textContent = m.deviceId || '';
+    if (!rangeSelect || !recentTableBody || !heartRateCanvas) {
+      console.warn(
+        'Dashboard: core DOM elements not found (timeRange, measurements-table tbody, or heartRateChart).'
+      );
+      return;
+    }
 
-      const hrCell = document.createElement('td');
-      hrCell.textContent = m.heartRate;
+    // ---- Stat-card elements ----
+    const currentHrEl = document.getElementById('currentHeartRate');
+    const currentOxygenEl = document.getElementById('currentOxygen');
+    const todayCountEl = document.getElementById('todayMeasurements');
+    const activeDevicesEl = document.getElementById('activeDevices');
 
-      const spo2Cell = document.createElement('td');
-      spo2Cell.textContent = m.spo2;
+    // ---------------------------------------------------------
+    // Helper: figure out measurement timestamp as Date
+    // (supports either .takenAt from backend or .timestamp from mock data)
+    // ---------------------------------------------------------
+    function getMeasurementTime(m) {
+      const raw = m.takenAt || m.timestamp;
+      const d = raw ? new Date(raw) : null;
+      return d && !Number.isNaN(d.getTime()) ? d : null;
+    }
 
-      row.appendChild(timeCell);
-      row.appendChild(deviceCell);
-      row.appendChild(hrCell);
-      row.appendChild(spo2Cell);
+    // ---------------------------------------------------------
+    // Range filtering: "today", "week", "month"
+    // ---------------------------------------------------------
+    function filterByRange(measurements, range) {
+      if (!Array.isArray(measurements) || measurements.length === 0) {
+        return [];
+      }
 
-      tbody.appendChild(row);
+      const now = new Date();
+      const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        0,
+        0,
+        0,
+        0
+      );
+
+      let start;
+
+      switch (range) {
+        case 'today':
+          start = startOfToday;
+          break;
+        case 'week':
+          // Last 7 days (including today)
+          start = new Date(startOfToday);
+          start.setDate(start.getDate() - 6);
+          break;
+        case 'month':
+          // Last 30 days
+          start = new Date(startOfToday);
+          start.setDate(start.getDate() - 29);
+          break;
+        default:
+          // Unknown range -> no filtering
+          return measurements;
+      }
+
+      return measurements.filter((m) => {
+        const t = getMeasurementTime(m);
+        if (!t) return false;
+        return t >= start && t <= now;
+      });
+    }
+
+    // ---------------------------------------------------------
+    // Stat cards + table helpers
+    // ---------------------------------------------------------
+    function updateStatCards(measurements) {
+      if (!measurements || measurements.length === 0) {
+        if (currentHrEl) currentHrEl.textContent = '--';
+        if (currentOxygenEl) currentOxygenEl.textContent = '--';
+        if (todayCountEl) todayCountEl.textContent = '0';
+        return;
+      }
+
+      // Use newest measurement for "Current" stats
+      const newest = [...measurements].sort((a, b) => {
+        const ta = getMeasurementTime(a) || 0;
+        const tb = getMeasurementTime(b) || 0;
+        return tb - ta;
+      })[0];
+
+      if (currentHrEl) {
+        currentHrEl.textContent =
+          typeof newest.heartRate === 'number' ? newest.heartRate : '--';
+      }
+
+      // Backend uses spo2; mock data uses bloodOxygen
+      const spo2Value =
+        typeof newest.spo2 === 'number'
+          ? newest.spo2
+          : typeof newest.bloodOxygen === 'number'
+          ? newest.bloodOxygen
+          : null;
+
+      if (currentOxygenEl) {
+        currentOxygenEl.textContent = spo2Value ?? '--';
+      }
+
+      if (todayCountEl) {
+        todayCountEl.textContent = String(measurements.length);
+      }
+    }
+
+    function updateRecentTable(measurements) {
+      recentTableBody.innerHTML = '';
+
+      if (!measurements || measurements.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 4;
+        cell.textContent = 'No measurements for this range.';
+        row.appendChild(cell);
+        recentTableBody.appendChild(row);
+        return;
+      }
+
+      const sortedNewestFirst = [...measurements].sort((a, b) => {
+        const ta = getMeasurementTime(a) || 0;
+        const tb = getMeasurementTime(b) || 0;
+        return tb - ta;
+      });
+
+      sortedNewestFirst.forEach((m) => {
+        const row = document.createElement('tr');
+
+        const t = getMeasurementTime(m);
+        const timeText = t
+          ? t.toLocaleString([], {
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+            })
+          : '--';
+
+        const timeCell = document.createElement('td');
+        timeCell.textContent = timeText;
+
+        const deviceCell = document.createElement('td');
+        deviceCell.textContent = m.deviceId || 'Device';
+
+        const hrCell = document.createElement('td');
+        hrCell.textContent =
+          typeof m.heartRate === 'number' ? m.heartRate : '--';
+
+        const spo2Val =
+          typeof m.spo2 === 'number'
+            ? m.spo2
+            : typeof m.bloodOxygen === 'number'
+            ? m.bloodOxygen
+            : null;
+
+        const spo2Cell = document.createElement('td');
+        spo2Cell.textContent = spo2Val ?? '--';
+
+        row.appendChild(timeCell);
+        row.appendChild(deviceCell);
+        row.appendChild(hrCell);
+        row.appendChild(spo2Cell);
+
+        recentTableBody.appendChild(row);
+      });
+    }
+
+    function updateActiveDevicesCard() {
+      if (!activeDevicesEl || !apiManager.getDevices) return;
+
+      apiManager
+        .getDevices()
+        .then((devices) => {
+          if (!Array.isArray(devices)) {
+            activeDevicesEl.textContent = '--';
+            return;
+          }
+          activeDevicesEl.textContent = String(devices.length);
+        })
+        .catch((err) => {
+          console.warn(
+            'Dashboard: error loading devices for activeDevices card',
+            err
+          );
+          activeDevicesEl.textContent = '--';
+        });
+    }
+
+    // ---------------------------------------------------------
+    // Chart updates via chartsManager (from charts.js)
+    // ---------------------------------------------------------
+    function updateCharts(measurements) {
+      if (!chartsManager) {
+        console.warn('Dashboard: chartsManager not available; skipping charts.');
+        return;
+      }
+
+      // We want chronological order for charts
+      const sortedAscending = [...measurements].sort((a, b) => {
+        const ta = getMeasurementTime(a) || 0;
+        const tb = getMeasurementTime(b) || 0;
+        return ta - tb;
+      });
+
+      const chartData = sortedAscending.map((m) => {
+        const t = getMeasurementTime(m) || new Date();
+        const hr = m.heartRate;
+        const spo2 =
+          typeof m.spo2 === 'number'
+            ? m.spo2
+            : typeof m.bloodOxygen === 'number'
+            ? m.bloodOxygen
+            : null;
+
+        return {
+          timestamp: t,
+          heartRate: hr,
+          bloodOxygen: spo2,
+          deviceId: m.deviceId || 'Device',
+        };
+      });
+
+      chartsManager.updateHeartRateChart(chartData);
+      chartsManager.updateOxygenChart(chartData);
+    }
+
+    // ---------------------------------------------------------
+    // Core loader for a given range
+    // ---------------------------------------------------------
+    async function loadMeasurementsAndRender(rangeValue) {
+      const range = rangeValue || rangeSelect.value || 'today';
+
+      try {
+        // Ask backend for measurements (optionally passing range).
+        // Backend may or may not use the query; we still filter in the browser.
+        const payload = await apiManager.getMeasurements({ range });
+
+        // Support two shapes: array OR { measurements: [...] }
+        const allMeasurements = Array.isArray(payload)
+          ? payload
+          : payload && Array.isArray(payload.measurements)
+          ? payload.measurements
+          : [];
+
+        const filtered = filterByRange(allMeasurements, range);
+
+        updateRecentTable(filtered);
+        updateStatCards(filtered);
+        updateCharts(filtered);
+        updateActiveDevicesCard();
+      } catch (err) {
+        console.error('Dashboard: failed to load measurements', err);
+        updateRecentTable([]);
+        updateStatCards([]);
+        if (chartsManager) {
+          chartsManager.updateHeartRateChart([]);
+          chartsManager.updateOxygenChart([]);
+        }
+      }
+    }
+
+    // ---------------------------------------------------------
+    // Event wiring
+    // ---------------------------------------------------------
+    rangeSelect.addEventListener('change', () => {
+      loadMeasurementsAndRender(rangeSelect.value);
     });
-  } catch (err) {
-    console.error('Failed to load measurements in dashboard.js:', err);
-    const row = document.createElement('tr');
-    const cell = document.createElement('td');
-    cell.colSpan = 4;
-    cell.textContent = 'Error loading measurements.';
-    row.appendChild(cell);
-    tbody.appendChild(row);
-  }
-});
+
+    // Initial load – use whatever is in the select (default "today")
+    loadMeasurementsAndRender(rangeSelect.value);
+  });
+})();

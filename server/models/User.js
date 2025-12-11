@@ -1,5 +1,27 @@
 // server/models/User.js
-// MongoDB model for user accounts.
+// -------------------------------------------------------------
+// Heart Track - User Model (Mongoose Schema)
+// -------------------------------------------------------------
+//  Defines the structure of user accounts stored in MongoDB.
+//  Each user record includes:
+//    • email        → unique login identifier (lowercased)
+//    • passwordHash → bcrypt-hashed password (never stored raw)
+//    • name         → optional display name for UI features
+//
+//  Mongoose timestamps automatically add:
+//    • createdAt
+//    • updatedAt
+//
+//  Example user document:
+//    {
+//      _id: "...",
+//      email: "student@arizona.edu",
+//      passwordHash: "$2b$12$...",
+//      name: "Elias",
+//      createdAt: "2025-11-10T...",
+//      updatedAt: "2025-11-10T..."
+//    }
+// -------------------------------------------------------------
 
 const mongoose = require('mongoose');
 

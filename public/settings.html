@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Heart Track</title>
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/charts.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Top Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <h2>❤️ Heart Track</h2>
+      </div>
+      <div class="nav-menu" id="nav-menu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="login.html" class="nav-link">Login</a>
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="weekly-summary.html" class="nav-link">Weekly Summary</a>
+        <a href="daily-detail.html" class="nav-link">Daily Detail</a>
+        <a href="device-management.html" class="nav-link">Devices</a>
+        <a href="settings.html" class="nav-link active">Settings</a>
+        <a href="#" class="nav-link" id="logoutBtn">Logout</a>
+      </div>
+      <div class="nav-toggle" id="nav-toggle">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!--  Settings Content -->
+  <main class="dashboard-main">
+    <div class="container">
+
+      <!-- Header -->
+      <div class="dashboard-header">
+        <div>
+          <h1>Settings</h1>
+          <p class="section-subtitle">View your account details and adjust basic Heart Track preferences.</p>
+        </div>
+      </div>
+
+      <!-- Top overview cards -->
+      <section class="stats-grid">
+        <!-- Account card -->
+        <div class="stat-card">
+          <div class="stat-icon">👤</div>
+          <div class="stat-content">
+            <h3 id="settingsAccountEmail">--</h3>
+            <p>Account Email</p>
+            <span class="stat-trend" id="settingsAccountCreated">--</span>
+          </div>
+        </div>
+
+        <!-- Devices summary -->
+        <div class="stat-card">
+          <div class="stat-icon">📱</div>
+          <div class="stat-content">
+            <h3 id="settingsDeviceCount">--</h3>
+            <p>Registered Devices</p>
+            <span class="stat-trend" id="settingsDeviceHint">Devices linked to this account.</span>
+          </div>
+        </div>
+
+        <!-- Measurement interval -->
+        <div class="stat-card">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-content">
+            <h3 id="settingsIntervalLabel">Every 30 minutes</h3>
+            <p>Default Measurement Interval</p>
+            <span class="stat-trend" id="settingsIntervalHint">Front-end preference only (demo).</span>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="stat-card">
+          <div class="stat-icon">🔔</div>
+          <div class="stat-content">
+            <h3 id="settingsNotificationsLabel">On</h3>
+            <p>Measurement Reminders</p>
+            <span class="stat-trend" id="settingsNotificationsHint">Controlled locally in this browser.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main settings layout -->
+      <div class="dashboard-grid">
+
+        <!-- Left: forms -->
+        <section class="dashboard-section">
+          <div class="section-header">
+            <h2>Account &amp; Preferences</h2>
+            <p class="section-subtitle">These settings are primarily for the demo UI. Some options are stored locally in the browser instead of the database.</p>
+          </div>
+
+          <form id="settingsForm" class="settings-form">
+            <!-- Account info (read-only for now) -->
+            <div class="form-group">
+              <label for="settingsEmail">Email</label>
+              <input type="email" id="settingsEmail" class="form-input" readonly>
+              <p class="form-helper-text">This is the email you used to sign up.</p>
+            </div>
+
+            <!-- Editable display name -->
+            <div class="form-group">
+              <label for="settingsName">Name</label>
+              <input type="text" id="settingsName" class="form-input" placeholder="Enter your name">
+              <p class="form-helper-text">This name is shown in your account and can be updated at any time.</p>
+            </div>
+
+            <!-- Optional change password section -->
+            <div class="form-group">
+              <label>Change Password</label>
+              <input type="password" id="settingsCurrentPassword" class="form-input" placeholder="Current password" autocomplete="current-password">
+              <input type="password" id="settingsNewPassword" class="form-input" placeholder="New password (optional)" autocomplete="new-password" style="margin-top: 0.5rem;">
+              <p class="form-helper-text">Leave the new password field blank if you do not want to change your password.</p>
+            </div>
+
+            <!-- Measurement interval preference -->
+            <div class="form-group">
+              <label for="settingsInterval">Measurement interval (device side)</label>
+              <select id="settingsInterval" class="form-select">
+                <option value="30">Every 30 minutes</option>
+                <option value="60">Every 60 minutes</option>
+                <option value="120">Every 2 hours</option>
+              </select>
+              <p class="form-helper-text">This represents how often your IoT device <em>tries</em> to take a measurement. 
+                In the full system, this would be synchronizedwith the Photon firmware; here we store it in the browser 
+                so you can still demonstrate the concept.
+              </p>
+            </div>
+
+            <!-- Notification preference -->
+            <div class="form-group">
+              <label for="settingsNotifications">Measurement reminders</label>
+              <select id="settingsNotifications" class="form-select">
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+              <p class="form-helper-text"> Toggle whether Heart Track should show reminder messages 
+                in the UI when you're on the dashboard (demo only).
+              </p>
+            </div>
+
+            <!-- Active hours (front-end only) -->
+            <div class="form-group">
+              <label>Active hours (local)</label>
+              <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <div>
+                  <label for="settingsStartTime" class="form-label">From</label>
+                  <input type="time" id="settingsStartTime" class="form-input" value="06:00">
+                </div>
+                <div>
+                  <label for="settingsEndTime" class="form-label">To</label>
+                  <input type="time" id="settingsEndTime" class="form-input" value="22:00">
+                </div>
+              </div>
+              <p class="form-helper-text">These times indicate when you typically wear the sensor.In a full deployment, 
+                they could be used to adjust when the device asks you for measurements.
+              </p>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Preferences</button>
+            <p id="settingsMessage" class="form-success" style="display:none;">Preferences saved locally for this browser.</p>
+          </form>
+        </section>
+
+        <!-- Right: info / help panel -->
+        <aside class="dashboard-sidebar">
+          <section class="sidebar-section">
+            <h3>How these settings work</h3>
+            <p>The Settings page is designed to show what a real IoT health application might expose to a user</p>
+            <ul class="bullet-list">
+              <li>Account details pulled from your login session.</li>
+              <li>Summary of how many devices are linked to your account.</li>
+              <li>Measurement schedule and reminder preferences.</li>
+            </ul>
+            <p class="form-helper-text">
+              For the course project milestone, most of these values are stored
+              locally in the browser rather than written back to the database.
+              That keeps the backend simpler while still letting you demo the
+              UX to the graders.
+            </p>
+          </section>
+
+          <section class="sidebar-section">
+            <h3>Data &amp; privacy</h3>
+            <p>
+              In a production system, this area would include options to export
+              your data, delete your account, or manage consent. For now, this
+              text explains the intent without requiring extra backend routes.
+            </p>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Heart Track</h3>
+                    <p>IoT-enabled heart rate monitoring system for ECE 413/513.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="login.html">Login</a></li>
+                        <li><a href="reference.html">References</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="docs/setup.md">Setup Guide</a></li>
+                        <li><a href="docs/api.md">API Documentation</a></li>
+                        <li><a href="docs/hardware.md">Hardware Guide</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ECE 413/513 Team. Educational project for University of Arizona.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts (Order matters: auth → api → page script) -->
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>

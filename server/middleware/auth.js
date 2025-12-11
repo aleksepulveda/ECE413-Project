@@ -1,5 +1,17 @@
 // server/middleware/auth.js
-// Checks for a JWT in Authorization header and attaches user info.
+// -------------------------------------------------------------
+// Heart Track - Authentication Middleware (JWT Protected Routes)
+// -------------------------------------------------------------
+//  • Extracts the JWT from the "Authorization" header (Bearer token).
+//  • Verifies the token using process.env.JWT_SECRET (fallback provided).
+//  • On success, attaches user info (id + email) to req.user.
+//  • On failure, responds with 401 Unauthorized.
+// -------------------------------------------------------------
+//  Used by protected routes such as:
+//    - /api/devices
+//    - /api/measurements
+//    - /api/users/profile
+// -------------------------------------------------------------
 
 const jwt = require('jsonwebtoken');
 

@@ -416,6 +416,44 @@ a:hover {
     border-bottom: none;
 }
 
+/* Team Card */
+.team {
+    margin: 60px 0;
+}
+
+.team-list {
+    list-style: none;
+    padding-left: 0;
+    line-height: 1.8;
+    font-size: 1.05rem;
+}
+
+.team-list li {
+    margin-bottom: 8px;
+}
+
+.team-photos {
+  margin: 25px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.team-photos img {
+  width: 220px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid #e5e5e5;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease;
+}
+
+.team-photos img:hover {
+  transform: scale(1.05);
+}
+
 /* Footer */
 .footer {
     background-color: var(--dark-gray);

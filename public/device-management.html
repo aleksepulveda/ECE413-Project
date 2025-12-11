@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Devices - Heart Track</title>
 
-  <!-- Re-use your main styles so it looks like the other pages -->
+  <!-- Shared styles -->
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/responsive.css">
   <link rel="stylesheet" href="css/charts.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Navigation (same structure as dashboard/login) -->
+  <!-- Top Navigation -->
   <nav class="navbar">
     <div class="nav-container">
       <div class="nav-logo">
@@ -24,7 +24,7 @@
         <a href="dashboard.html" class="nav-link">Dashboard</a>
         <a href="weekly-summary.html" class="nav-link">Weekly Summary</a>
         <a href="daily-detail.html" class="nav-link">Daily Detail</a>
-        <a href="device-management.html" class="nav-link active">Devices</a>
+        <a href="device-management.html" class="nav-link active">Devices</a>  <!-- acitve -->
         <a href="settings.html" class="nav-link">Settings</a>
         <a href="#" class="nav-link" id="logoutBtn">Logout</a>
       </div>
@@ -36,6 +36,7 @@
     </div>
   </nav>
 
+ <!-- Main Content -->
   <main class="dashboard-main">
     <div class="container">
       <!-- Page header -->
@@ -44,31 +45,31 @@
         <p>Register new Heart Track devices and view existing ones.</p>
       </div>
 
+      <!-- Left and right grid -->
       <div class="dashboard-grid">
         <!-- Left: Device list -->
         <section class="card">
           <h2>Registered Devices</h2>
-          <p class="section-subtitle">
-            Devices linked to your Heart Track account.
-          </p>
+          <p class="section-subtitle">Devices linked to your Heart Track account.</p>
 
           <div class="table-wrapper">
             <table id="devices-table">
               <thead>
-              <tr>
-                <th>Device Name</th>
-                <th>Device ID</th>
-                <th>Registered At</th>
-              </tr>
+                <tr>
+                  <th>Device Name</th>
+                  <th>Device ID</th>
+                  <th>Registered At</th>
+                  <th>Actions</th>
+                </tr>
               </thead>
               <tbody>
-              <!-- Filled by devices.js -->
+                <!-- Filled by devices.js -->
               </tbody>
             </table>
           </div>
 
           <div id="devicesEmptyMessage" class="form-helper-text" style="display:none;">
-            You don't have any devices yet. Use the form on the right to add one.
+            You don't have any devices yet. Use the form on the right to adda device.
           </div>
         </section>
 
@@ -76,32 +77,22 @@
         <aside class="dashboard-sidebar">
           <section class="sidebar-section">
             <h3>Add New Device</h3>
-            <p class="section-subtitle">
-              Enter the device name and ID from your Photon / project label.
-            </p>
+            <p class="section-subtitle">Enter the device name and ID from your Photon / project label.</p>
 
             <form id="addDeviceForm" class="settings-form">
               <div class="form-group">
                 <label for="deviceName">Device Name</label>
-                <input type="text" id="deviceName" name="deviceName"
-                       placeholder="Bedroom Photon" required>
-                <p class="form-helper-text">
-                  A friendly name so you recognize the device (e.g., "Living Room Photon").
-                </p>
+                <input type="text" id="deviceName" name="deviceName" placeholder="Bedroom Photon" required>
+                <p class="form-helper-text">A friendly name so you recognize the device (e.g., "Living Room Photon").</p>
               </div>
 
               <div class="form-group">
                 <label for="deviceId">Device ID</label>
-                <input type="text" id="deviceId" name="deviceId"
-                       placeholder="PHOTON_123ABC" required>
-                <p class="form-helper-text">
-                  This should match the ID your Photon firmware uses when sending data.
-                </p>
+                <input type="text" id="deviceId" name="deviceId" placeholder="PHOTON_123ABC" required>
+                <p class="form-helper-text">This should match the ID your Photon firmware uses when sending data.</p>
               </div>
 
-              <button type="submit" class="btn btn-primary" id="addDeviceSubmit">
-                Register Device
-              </button>
+              <button type="submit" class="btn btn-primary" id="addDeviceSubmit">Register Device</button>
 
               <p id="deviceMessage" class="form-error" style="display:none;"></p>
               <p id="deviceSuccess" class="form-success" style="display:none;"></p>
@@ -110,51 +101,47 @@
 
           <section class="sidebar-section">
             <h3>How this works</h3>
-            <p>
-              When you register a device here, it is linked to your user account
-              in MongoDB. Your IoT device should send measurements to:
-            </p>
+            <p>When you register a device here, it is linked to your user account in MongoDB. Your IoT device should send measurements to:</p>
             <code>/api/measurements/device</code>
-            <p class="form-helper-text">
-              using its <strong>device ID</strong> and secret key (handled in the firmware).
-            </p>
+            <p class="form-helper-text">using its <strong>device ID</strong> and secret key (handled in the firmware).</p>
           </section>
         </aside>
       </div>
     </div>
   </main>
 
-  <!-- Footer (same style as other pages) -->
+  <!-- Footer -->
   <footer class="footer">
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3>Heart Track</h3>
-          <p>IoT-enabled heart rate monitoring system for ECE 413/513.</p>
-        </div>
-        <div class="footer-section">
-          <h4>Quick Links</h4>
-          <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="login.html">Login</a></li>
-            <li><a href="reference.html">References</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>Resources</h4>
-          <ul>
-            <li><a href="docs/setup.md">Setup Guide</a></li>
-            <li><a href="docs/api.md">API Documentation</a></li>
-            <li><a href="docs/hardware.md">Hardware Guide</a></li>
-          </ul>
-        </div>
+      <div class="container">
+          <div class="footer-content">
+              <div class="footer-section">
+                  <h3>Heart Track</h3>
+                  <p>IoT-enabled heart rate monitoring system for ECE 413/513.</p>
+              </div>
+              <div class="footer-section">
+                  <h4>Quick Links</h4>
+                  <ul>
+                      <li><a href="index.html">Home</a></li>
+                      <li><a href="login.html">Login</a></li>
+                      <li><a href="reference.html">References</a></li>
+                  </ul>
+              </div>
+              <div class="footer-section">
+                  <h4>Resources</h4>
+                  <ul>
+                      <li><a href="docs/setup.md">Setup Guide</a></li>
+                      <li><a href="docs/api.md">API Documentation</a></li>
+                      <li><a href="docs/hardware.md">Hardware Guide</a></li>
+                  </ul>
+              </div>
+          </div>
+          <div class="footer-bottom">
+              <p>&copy; 2025 ECE 413/513 Team. Educational project for University of Arizona.</p>
+          </div>
       </div>
-      <div class="footer-bottom">
-        <p>&copy; 2025 ECE 413/513 Team. Educational project for University of Arizona.</p>
-      </div>
-    </div>
   </footer>
 
+  <!-- Scripts (Order matters: auth → api → chart helpers → page script) -->
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>

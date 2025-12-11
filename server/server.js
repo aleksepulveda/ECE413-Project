@@ -1,7 +1,42 @@
-/**
- * Heart Track - Server Entry Point
- * Express.js server for the Heart Track application
- */
+// server/server.js
+// -------------------------------------------------------------
+// Heart Track - Express Server Entry Point
+// -------------------------------------------------------------
+//  This file boots the entire backend server, mounts middleware,
+//  connects to MongoDB, and exposes API routes for:
+//      • Authentication      (/api/auth)
+//      • Device Management   (/api/devices)
+//      • Measurements (IoT)  (/api/measurements)
+//
+//  Responsibilities:
+//
+//   1. Security Middleware
+//      - helmet() for HTTP security headers
+//      - CORS configuration (default localhost dev environment)
+//      - express-rate-limit to slow brute-force attempts
+//
+//   2. Request Parsing
+//      - JSON and URL-encoded payload handling (10MB limit)
+//
+//   3. Routing
+//      - /api/auth          → user registration & login
+//      - /api/devices       → protected via authMiddleware
+//      - /api/measurements  → device ingestion + analytics
+//      - Serves /public as frontend (dashboard, weekly summary, etc.)
+//      - Catch-all (*) route returns index.html (SPA-friendly)
+//
+//   4. Database Bootstrapping
+//      - Uses connectDB() to connect to MongoDB via Mongoose
+//      - Server starts *only after* MongoDB connection succeeds
+//
+//   5. Error Handling
+//      - Centralized errorHandler middleware returns clean JSON
+//
+//  Notes:
+//      • This backend expects frontend to run inside /public.
+//      • JWT_SECRET and MONGODB_URI may be configured via .env.
+//      • Default port: 3000.
+// -------------------------------------------------------------
 
 const express = require('express');
 const cors = require('cors');
@@ -61,8 +96,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/devices', authMiddleware, deviceRoutes);
-app.use('/api/measurements', authMiddleware, measurementRoutes);
-// app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/measurements', measurementRoutes);
+app.use('/api/users', authMiddleware, userRoutes);
 
 // Fallback: serve index.html for any non-API route
 app.get('*', (req, res) => {

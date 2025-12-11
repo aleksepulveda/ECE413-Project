@@ -1,5 +1,31 @@
 // server/routes/auth.js
-// User registration and login using MongoDB, bcrypt, and JWT.
+// -------------------------------------------------------------
+// Heart Track - Authentication Routes (Register + Login)
+// -------------------------------------------------------------
+//  Provides endpoints for user account creation and login.
+//  Backed by MongoDB via the User model, using:
+//    • bcryptjs for password hashing
+//    • JWT (jsonwebtoken) for session tokens
+//
+//  Endpoints:
+//    POST /api/auth/register
+//        - Creates a new user (email/password/name)
+//        - Hashes password using bcrypt
+//        - Returns JWT + basic user info
+//
+//    POST /api/auth/login
+//        - Validates user credentials
+//        - Verifies hashed password
+//        - Returns JWT + basic user info
+//
+//  JWT Notes:
+//    • Payload includes: { sub: userId, email }
+//    • Token lifetime: 7 days (suitable for course project)
+//    • Secret read from process.env.JWT_SECRET or fallback
+//
+//  All responses avoid leaking sensitive details such as
+//  whether the email exists or which part of login failed.
+// -------------------------------------------------------------
 
 const express = require('express');
 const bcrypt = require('bcryptjs');

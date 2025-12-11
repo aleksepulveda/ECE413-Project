@@ -1,5 +1,34 @@
 // server/routes/devices.js
-// Routes for registering and listing Heart Track devices for a user.
+// -------------------------------------------------------------
+// Heart Track - Device Management Routes
+// -------------------------------------------------------------
+//  Handles registration and retrieval of IoT devices associated
+//  with a logged-in user. Uses the Device MongoDB model.
+//
+//  Authentication:
+//    • All routes require authMiddleware
+//    • req.user.id is populated from the verified JWT
+//
+//  Endpoints:
+//    GET /api/devices
+//        - Returns all devices owned by the authenticated user
+//        - Sorted by creation time (oldest → newest)
+//
+//    POST /api/devices
+//        - Registers a new device to the user
+//        - Body: { name, deviceId }
+//        - Ensures deviceId is unique across the entire system
+//        - Stores userId from req.user.id
+//
+//  Device Schema Summary:
+//    {
+//      userId: ObjectId (owner),
+//      name: "Bedroom Sensor",
+//      deviceId: "PHOTON_ABC123",
+//      active: true,
+//      createdAt / updatedAt auto-generated
+//    }
+// -------------------------------------------------------------
 
 const express = require('express');
 const Device = require('../models/Device');
@@ -47,6 +76,33 @@ router.post('/', async (req, res, next) => {
     });
 
     return res.status(201).json(device);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * DELETE /api/devices/:id
+ * Remove a device owned by the logged-in user.
+ * :id is the MongoDB _id of the Device document.
+ */
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Device.findOneAndDelete({
+      _id: id,
+      userId: req.user.id, // ensure you can only delete your own device
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Device not found for this user' });
+    }
+
+    return res.json({
+      message: 'Device removed successfully',
+      device: deleted,
+    });
   } catch (err) {
     next(err);
   }

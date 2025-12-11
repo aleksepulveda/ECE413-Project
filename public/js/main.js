@@ -1,7 +1,23 @@
-/**
- * Heart Track - Main JavaScript Module
- * Handles navigation, mobile menu, and general UI interactions
- */
+// public/js/main.js
+// -------------------------------------------------------------
+// Heart Track - Global UI / Shell Logic
+// -------------------------------------------------------------
+// This module defines the HeartTrackApp "shell" that powers
+// common UI behavior across ALL pages. It:
+//   • Controls the mobile navigation menu (hamburger toggle,
+//     closing on link click or outside click).
+//   • Enables smooth in-page scrolling for anchor links
+//     (e.g., landing-page sections).
+//   • Adds basic client-side form validation for required
+//     inputs, emails, and registration passwords/confirm
+//     passwords, showing inline error messages.
+//   • Sets up scroll-based "fade in" animations for cards
+//     (.feature-card, .step, .stat-card) using an
+//     IntersectionObserver.
+//   • Exposes small utility helpers (showNotification,
+//     formatDate, formatTime, debounce, throttle) that
+//     other scripts can call via window.heartTrackApp.
+// -------------------------------------------------------------
 
 class HeartTrackApp {
     constructor() {

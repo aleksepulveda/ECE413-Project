@@ -1,7 +1,37 @@
-/**
- * Heart Track - API Communication Module
- * Handles all API calls to the backend server
- */
+// public/js/api.js
+// -------------------------------------------------------------
+// Heart Track - API Communication Manager
+// -------------------------------------------------------------
+//  - Centralized wrapper around window.fetch for all backend calls.
+//  - Automatically injects Authorization headers using auth.js.
+//  - Installs a global fetch interceptor that:
+//        • Adds JWT to every request when logged in
+//        • Gracefully handles 401 Unauthorized responses
+//        • Prevents accidental auto-logout unless token is missing
+//  - Provides API helpers:
+//        AUTH:
+//          • login(email, password, rememberMe)
+//          • register(email, password)
+//          • logout()
+//        DEVICES:
+//          • getDevices()
+//          • registerDevice(data)
+//          • updateDevice(id, data)
+//          • deleteDevice(id)
+//        MEASUREMENTS:
+//          • getMeasurements(params)
+//          • submitMeasurement(data)
+//          • addMeasurementFromDevice(data)
+//          • getWeeklySummary()
+//          • getDailyDetails(date)
+//        USER PROFILE / SETTINGS:
+//          • getUserProfile()
+//          • updateUserProfile(data)
+//          • updateUserSettings(settings)
+//  - Includes JSON response handling with error translation.
+//  - Contains mock data generators used for development/testing.
+//  - Instantiated globally as window.apiManager on DOMContentLoaded.
+// -------------------------------------------------------------
 
 class APIManager {
     constructor() {

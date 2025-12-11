@@ -1,5 +1,27 @@
 // server/models/Measurement.js
-// Single measurement from a device: heart rate + SpO2 at a point in time.
+// -------------------------------------------------------------
+// Heart Track - Measurement Model (Mongoose Schema)
+// -------------------------------------------------------------
+//  Represents a single physiological reading sent by a device.
+//  Each measurement includes:
+//    • deviceId   → string ID matching Device.deviceId
+//    • heartRate  → beats per minute (BPM)
+//    • spo2       → oxygen saturation percentage (SpO₂)
+//    • takenAt    → timestamp of when the measurement occurred
+//
+//  The schema also automatically stores createdAt / updatedAt
+//  for auditing and weekly/daily analytics.
+// -------------------------------------------------------------
+//  Example document:
+//    {
+//      deviceId: "PHOTON_ABC123",
+//      heartRate: 72,
+//      spo2: 98,
+//      takenAt: "2025-11-17T20:05:00.000Z",
+//      createdAt: "...",
+//      updatedAt: "..."
+//    }
+// -------------------------------------------------------------
 
 const mongoose = require('mongoose');
 

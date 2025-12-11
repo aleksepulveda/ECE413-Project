@@ -1,7 +1,34 @@
-/**
- * Heart Track - Charts Module
- * Handles data visualization using Chart.js
- */
+// public/js/charts.js
+// -------------------------------------------------------------
+// Heart Track - Charts / Visualization Manager (Chart.js)
+// -------------------------------------------------------------
+//  - Centralizes ALL Chart.js configuration + rendering logic.
+//  - Creates and manages the following charts when their
+//    <canvas> elements exist on the page:
+//        • heartRateChart       → Heart Rate Over Time (line)
+//        • oxygenChart          → SpO₂ Over Time (line)
+//        • weeklySummaryChart   → Weekly Heart Rate Summary (bar)
+//        • dailyDetailChart     → Daily Detailed View (dual-axis line)
+//  - Applies global Chart.js defaults so every page shares the
+//    same typography, colors, tooltips, and legend styling.
+//  - Exposes high-level update methods that other modules call:
+//        • updateHeartRateChart(data)
+//        • updateOxygenChart(data)
+//        • updateWeeklySummaryChart(data)
+//        • updateDailyDetailChart(data)
+//    (Each expects an array of objects with timestamp,
+//     heartRate, and/or bloodOxygen fields.)
+//  - Includes helpers for:
+//        • calculateDailyAverages() for weekly bars
+//        • formatTime() / formatDate() for x-axis labels
+//  - Utility controls:
+//        • destroyChart(name) / destroyAllCharts()
+//        • resizeChart(name)  / resizeAllCharts()
+//        • exportChart(name, filename) → PNG download
+//  - On DOM load, instantiates `window.chartsManager` and wires
+//    a window resize listener to keep charts responsive.
+// -------------------------------------------------------------
+
 
 class ChartsManager {
     constructor() {

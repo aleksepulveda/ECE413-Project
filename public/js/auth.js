@@ -1,7 +1,30 @@
-/**
- * Heart Track - Authentication Module
- * Handles user login, registration, and authentication state
- */
+// public/js/auth.js
+// -------------------------------------------------------------
+// Heart Track - Authentication + Session Management Module
+// -------------------------------------------------------------
+//  - Manages full login, registration, logout, and session state.
+//  - Stores JWT tokens + user objects in localStorage or sessionStorage
+//      depending on the “Remember Me” option.
+//  - Redirects users based on authentication state (auto-redirects
+//      logged-out users away from protected pages).
+//  - Implements UI interactions for:
+//        • Login / Register tab switching
+//        • Password strength meter (live updates)
+//        • Inline form validation + user-friendly error handling
+//        • Loading states on submit buttons
+//  - API Calls handled manually via fetch() to:
+//        • POST /api/auth/login
+//        • POST /api/auth/register
+//        • POST /api/auth/logout
+//  - Provides helpers for:
+//        • isAuthenticated()
+//        • getAuthHeaders() → attaches Authorization: Bearer <token>
+//        • getAuthData() (reads token + user from storage)
+//        • storeAuthData() (persists token + user)
+//  - Automatically binds logout button (#logoutBtn) globally.
+//  - On DOM load, instantiates `window.authManager` for use by
+//    all other modules (dashboard, daily-detail, settings, etc).
+// -------------------------------------------------------------
 
 class AuthManager {
     constructor() {

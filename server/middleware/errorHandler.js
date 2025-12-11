@@ -1,6 +1,18 @@
 // server/middleware/errorHandler.js
-// Central error handler for the API.
-// Any thrown error or `next(err)` will end up here.
+// -------------------------------------------------------------
+// Heart Track - Global Error Handling Middleware
+// -------------------------------------------------------------
+//  • Catches any error passed via next(err) or thrown in routes.
+//  • Logs the error server-side for debugging.
+//  • Sends a JSON response with:
+//        { error: <message> }
+//    using `err.status` if provided, otherwise HTTP 500.
+// -------------------------------------------------------------
+//  This ensures consistent API error responses across:
+//    - Auth routes
+//    - Device routes
+//    - Measurement routes
+// -------------------------------------------------------------
 
 module.exports = function errorHandler(err, req, res, next) {
   console.error('Error:', err);

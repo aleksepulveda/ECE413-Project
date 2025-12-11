@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Heart Track</title>
+
+    <!-- Shared styles -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/charts.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Local Chart.js bundle (no CDN due to issues / errors) -->
     <script src="js/chart.js"></script>
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Top Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
@@ -20,7 +24,7 @@
             <div class="nav-menu" id="nav-menu">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="login.html" class="nav-link">Login</a>
-                <a href="dashboard.html" class="nav-link active">Dashboard</a>
+                <a href="dashboard.html" class="nav-link active">Dashboard</a>      <!-- acitve -->
                 <a href="weekly-summary.html" class="nav-link">Weekly Summary</a>
                 <a href="daily-detail.html" class="nav-link">Daily Detail</a>
                 <a href="device-management.html" class="nav-link">Devices</a>
@@ -35,7 +39,7 @@
         </div>
     </nav>
 
-    <!-- Dashboard Content -->
+    <!-- Main Content -->
     <main class="dashboard-main">
         <div class="container">
             <!-- Dashboard Header -->
@@ -47,7 +51,7 @@
                 </div>
             </div>
 
-            <!-- Stats Overview -->
+            <!-- Stats Overview, gets updated though dashboard.js -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon">💓</div>
@@ -85,17 +89,15 @@
 
             <section class="card">
                 <h2>Recent Measurements</h2>
-                <p class="section-subtitle">
-                    Latest heart rate and SpO₂ readings from your registered devices.
-                </p>
+                <p class="section-subtitle">Latest heart rate and SpO₂ readings from your registered devices.</p>
                 <div class="table-wrapper">
                     <table id="measurements-table">
                     <thead>
                         <tr>
-                        <th>Time</th>
-                        <th>Device ID</th>
-                        <th>Heart Rate (BPM)</th>
-                        <th>SpO₂ (%)</th>
+                            <th>Time</th>
+                            <th>Device ID</th>
+                            <th>Heart Rate (BPM)</th>
+                            <th>SpO₂ (%)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -131,7 +133,7 @@
 
                 <!-- Sidebar -->
                 <div class="dashboard-sidebar">
-                    <!-- Recent Activity -->
+                    <!-- Recent Activity (static for now) -->
                     <div class="sidebar-section">
                         <h3>Recent Activity</h3>
                         <div class="activity-list" id="activityList">
@@ -159,7 +161,7 @@
                         </div>
                     </div>
 
-                    <!-- Device Status -->
+                    <!-- Device Status (static for now) -->
                     <div class="sidebar-section">
                         <h3>Device Status</h3>
                         <div class="device-list" id="deviceList">
@@ -209,7 +211,7 @@
                 </div>
             </div>
 
-            <!-- Alerts Section -->
+            <!-- Alerts Section (shows how alerts would look) -->
             <div class="alerts-section">
                 <h2>Health Alerts</h2>
                 <div class="alerts-list" id="alertsList">
@@ -267,15 +269,11 @@
         </div>
     </footer>
 
-    <!-- Auth + API -->
+    <!-- Scripts (Order matters: auth → api → chart helpers → page script) -->
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
-
-    <!-- Charts + general UI -->
     <script src="js/charts.js"></script>
     <script src="js/main.js"></script>
-
-    <!-- Dashboard-specific logic -->
     <script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -1,7 +1,20 @@
 // public/js/devices.js
-// Handles the Device Management page:
-//  - Loads registered devices for the logged-in user
-//  - Allows adding a new device via the form
+// -------------------------------------------------------------
+// Heart Track - Device Management Page Logic
+// -------------------------------------------------------------
+// This script powers the Device Management view. It:
+//   • Reuses authManager (auth.js) and apiManager (api.js)
+//   • Loads the list of registered devices for the logged-in user
+//     via apiManager.getDevices() and renders them into
+//     <table id="devices-table">.
+//   • Shows a friendly "no devices" empty state when none exist.
+//   • Handles the "Add Device" form, sending a POST request
+//     to /api/devices via apiManager.registerDevice().
+//   • Displays success / error messages when devices are added
+//     or when API calls fail.
+//   • Logs helpful messages to the console for debugging
+//     (e.g., current auth state, loaded devices).
+// -------------------------------------------------------------
 
 console.log('devices.js loaded');
 
@@ -97,9 +110,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         : '--';
       createdTd.textContent = dateStr;
 
+      // Removal section
+      const actionsTd = document.createElement('td');
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remove';
+      removeBtn.className = 'btn btn-danger btn-sm device-remove-btn';
+
+      // Use Mongo _id if available; fall back to generic id
+      removeBtn.dataset.id = device._id || device.id;
+
+      actionsTd.appendChild(removeBtn);
+
       tr.appendChild(nameTd);
       tr.appendChild(idTd);
       tr.appendChild(createdTd);
+      tr.appendChild(actionsTd);
 
       tableBody.appendChild(tr);
     });
@@ -152,6 +178,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       console.error('Error registering device:', err);
       showError(err.message || 'Failed to register device.');
+    }
+  });
+
+  // ---- Handle "Remove" clicks via event delegation ----
+  tableBody.addEventListener('click', async (evt) => {
+    const btn = evt.target.closest('.device-remove-btn');
+    if (!btn) return;
+
+    const deviceId = btn.dataset.id;
+    if (!deviceId) {
+      console.warn('Remove clicked but no device id attached');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Remove this device from your account? Existing measurements will NOT be deleted.'
+    );
+    if (!confirmed) return;
+
+    clearMessages();
+
+    try {
+      console.log('Removing device with id:', deviceId);
+      await apiManager.deleteDevice(deviceId);
+      showSuccess('Device removed successfully.');
+      await loadDevices();
+    } catch (err) {
+      console.error('Error removing device:', err);
+      showError(err.message || 'Failed to remove device.');
     }
   });
 
