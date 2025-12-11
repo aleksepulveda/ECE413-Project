@@ -64,20 +64,27 @@ const PORT = process.env.PORT || 3000;
 // ──────────────────────────────────────────────
 // Security middleware
 // ──────────────────────────────────────────────
-app.use(helmet());
+// Configure Helmet for AWS deployment (allows HTTP, disables problematic security headers)
+app.use(helmet({
+  contentSecurityPolicy: false,  // Disable CSP to allow inline scripts/styles
+  hsts: false,                    // Disable HSTS (doesn't force HTTPS redirect)
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false
+}));
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || '*',  // Allow all origins (configure in production)
     credentials: true,
   })
 );
 
 // Rate limiting for API routes
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  max: 100,                   // limit each IP to 100 requests per window
-  message: 'Too many requests from this IP, please try again later.',
-});
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,  // 15 minutes
+//   max: 100,                   // limit each IP to 100 requests per window
+//   message: 'Too many requests from this IP, please try again later.',
+// });
 app.use('/api/', limiter);
 
 // Body parsing
@@ -85,7 +92,16 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static frontend files
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, filePath) => {
+    // Ensure correct MIME types for CSS and JS files
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
 
 // ──────────────────────────────────────────────
 // API Routes (we'll turn these on as we implement them)
@@ -96,11 +112,13 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/devices', authMiddleware, deviceRoutes);
+// Note: /api/measurements has mixed auth - some routes use JWT, some use API key
+// So we apply auth inside the route handlers, not globally here
 app.use('/api/measurements', measurementRoutes);
-app.use('/api/users', authMiddleware, userRoutes);
+// app.use('/api/users', authMiddleware, userRoutes);
 
-// Fallback: serve index.html for any non-API route
-app.get('*', (req, res) => {
+// Fallback: serve index.html for any non-API route (but not static files)
+app.get(/^(?!\/api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
