@@ -53,6 +53,7 @@ const authRoutes = require('./routes/auth');
 const deviceRoutes = require('./routes/devices');
 const measurementRoutes = require('./routes/measurements');
 const userRoutes = require('./routes/users');
+const chatRoutes = require('./routes/chat');
 
 // Import middleware
 const authMiddleware = require('./middleware/auth');
@@ -116,6 +117,10 @@ app.use('/api/devices', authMiddleware, deviceRoutes);
 // So we apply auth inside the route handlers, not globally here
 app.use('/api/measurements', measurementRoutes);
 // app.use('/api/users', authMiddleware, userRoutes);
+
+// AI Chat Route (New)
+// Protected by authMiddleware so we know who the user is
+app.use('/api/chat', authMiddleware, chatRoutes);
 
 // Fallback: serve index.html for any non-API route (but not static files)
 app.get(/^(?!\/api).*/, (req, res) => {
