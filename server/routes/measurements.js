@@ -43,11 +43,11 @@ router.post('/device', deviceApiKey, async (req, res, next) => {
     const hrNum = Number(heartRate);
     const spo2Num = Number(spo2);
 
-    if (!Number.isFinite(hrNum) || !Number.isFinite(spo2Num)) {
-      return res.status(400).json({
-        error: 'heartRate and spo2 must be numeric values'
-      });
-    }
+    // if (!Number.isFinite(hrNum) || !Number.isFinite(spo2Num)) {
+    //   return res.status(400).json({
+    //     error: 'heartRate and spo2 must be numeric values'
+    //   });
+    // }
 
     // Round to nearest integer for storage
     const hrRounded = Math.round(hrNum);
