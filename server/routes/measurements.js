@@ -4,60 +4,123 @@
 // -------------------------------------------------------------
 //  Responsible for storing, retrieving, and aggregating heart-
 //  rate (BPM) and SpO₂ (%) measurements sent by IoT devices.
+//
+//  Supports two payload styles for POST /api/measurements/device:
+//    1) JSON with explicit fields:
+//         { deviceId, heartRate, spo2, takenAt }
+//    2) Particle event style:
+//         {
+//           coreid: "...",
+//           data: "73.462433,83.450096",
+//           published_at: "..."
+//         }
 // -------------------------------------------------------------
 
 const express = require('express');
 const router = express.Router();
 
 const Measurement = require('../models/Measurement');
-const Device = require('../models/Device'); // (currently unused, but fine)
+const Device = require('../models/Device'); // currently unused but fine
 const deviceApiKey = require('../middleware/deviceApiKey');
+
+// -------------------------------------------------------------------
+// Helper: parse heartRate/spo2 from body
+// -------------------------------------------------------------------
+function extractHeartRateAndSpo2(body) {
+  const { heartRate, spo2, data } = body || {};
+
+  let hrNum = Number.isFinite(Number(heartRate))
+    ? Number(heartRate)
+    : NaN;
+  let spo2Num = Number.isFinite(Number(spo2))
+    ? Number(spo2)
+    : NaN;
+
+  // If both parsed fine, we’re done.
+  if (Number.isFinite(hrNum) && Number.isFinite(spo2Num)) {
+    return { hrNum, spo2Num };
+  }
+
+  // Otherwise, try to parse from `data: "HR,SPO2"` if present
+  if (typeof data === 'string') {
+    const parts = data.split(',');
+    if (parts.length >= 2) {
+      const parsedHr = Number(parts[0].trim());
+      const parsedSpo2 = Number(parts[1].trim());
+
+      if (Number.isFinite(parsedHr) && Number.isFinite(parsedSpo2)) {
+        return { hrNum: parsedHr, spo2Num: parsedSpo2 };
+      }
+    }
+  }
+
+  // Still not valid
+  return { hrNum: NaN, spo2Num: NaN };
+}
 
 // -------------------------------------------------------------------
 // POST /api/measurements/device
 //  -> Endpoint your Photon / Postman uses to push a single reading.
-// Body:
+// Body examples:
+//
+// 1) JSON (Postman / custom client):
 //  {
 //    "deviceId": "PHOTON_123ABC",
-//    "heartRate": 75.0,        // can be float or string "75.0"
-//    "spo2": 98.5,             // can be float or string "98.5"
-//    "takenAt": "2025-12-06T00:36:19.006Z"   // optional, defaults to now
+//    "heartRate": 75,
+//    "spo2": 98,
+//    "takenAt": "2025-12-06T00:36:19.006Z"   // optional
+//  }
+//
+// 2) Particle event forwarded by webhook:
+//  {
+//    "coreid": "0a10aced202194944a064ed4",
+//    "data": "73.462433,83.450096",
+//    "published_at": "2025-12-12T00:41:02.223Z"
 //  }
 // -------------------------------------------------------------------
 router.post('/device', deviceApiKey, async (req, res, next) => {
   try {
-    const { deviceId, heartRate, spo2, takenAt } = req.body || {};
+    const body = req.body || {};
 
-    // Basic presence checks (allow 0 but not null/undefined)
-    if (deviceId == null) {
-      return res.status(400).json({ error: 'deviceId is required' });
-    }
-    if (heartRate == null) {
-      return res.status(400).json({ error: 'heartRate is required' });
-    }
-    if (spo2 == null) {
-      return res.status(400).json({ error: 'spo2 is required' });
+    // Device identifier:
+    // Prefer explicit deviceId, otherwise fall back to coreid.
+    let { deviceId, takenAt } = body;
+    const { coreid, published_at } = body;
+
+    if (!deviceId && coreid) {
+      deviceId = coreid; // allow Photon coreid as deviceId
     }
 
-    // Convert to numbers in case they arrive as strings like "75.0"
-    const hrNum = Number(heartRate);
-    const spo2Num = Number(spo2);
+    if (!deviceId) {
+      return res.status(400).json({ error: 'deviceId (or coreid) is required' });
+    }
 
-    // if (!Number.isFinite(hrNum) || !Number.isFinite(spo2Num)) {
-    //   return res.status(400).json({
-    //     error: 'heartRate and spo2 must be numeric values'
-    //   });
-    // }
+    // Try to extract numeric HR / SpO2
+    const { hrNum, spo2Num } = extractHeartRateAndSpo2(body);
+
+    if (!Number.isFinite(hrNum) || !Number.isFinite(spo2Num)) {
+      return res.status(400).json({
+        error: 'heartRate and spo2 must be numeric values (or parsable from data "HR,SPO2")'
+      });
+    }
 
     // Round to nearest integer for storage
     const hrRounded = Math.round(hrNum);
     const spo2Rounded = Math.round(spo2Num);
 
+    // Choose timestamp: explicit takenAt > published_at > now
+    let effectiveTakenAt = new Date();
+    if (takenAt) {
+      effectiveTakenAt = new Date(takenAt);
+    } else if (published_at) {
+      effectiveTakenAt = new Date(published_at);
+    }
+
     const measurement = await Measurement.create({
       deviceId: String(deviceId),
       heartRate: hrRounded,
       spo2: spo2Rounded,
-      takenAt: takenAt ? new Date(takenAt) : new Date()
+      takenAt: effectiveTakenAt
     });
 
     return res.status(201).json(measurement);
@@ -93,7 +156,17 @@ router.get('/', async (req, res, next) => {
 //   "averageSpO2": 98,
 //   "totalMeasurements": 42,
 //   "activeDevices": 2,
-//   "daily": [ ... ]
+//   "daily": [
+//     {
+//       "date": "2025-12-01",
+//       "avgHeartRate": 70,
+//       "avgSpO2": 98,
+//       "minHeartRate": 60,
+//       "maxHeartRate": 85,
+//       "count": 8
+//     },
+//     ...
+//   ]
 // }
 // -------------------------------------------------------------------
 router.get('/weekly', async (req, res, next) => {
