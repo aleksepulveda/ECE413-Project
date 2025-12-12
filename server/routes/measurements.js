@@ -4,66 +4,13 @@
 // -------------------------------------------------------------
 //  Responsible for storing, retrieving, and aggregating heart-
 //  rate (BPM) and SpO₂ (%) measurements sent by IoT devices.
-//
-//  Endpoints:
-//
-//   POST /api/measurements/device
-//      • Used by Particle Photon or Postman to push a single
-//        reading.
-//      • Body:
-//          {
-//            deviceId: "PHOTON_123ABC",
-//            heartRate: 75,
-//            spo2: 98,
-//            takenAt: "2025-12-06T00:36:19.006Z"  // optional
-//          }
-//      • Creates a Measurement document.
-//      • Does NOT require user authentication because devices
-//        cannot log in; they authenticate only via deviceId.
-//
-//   GET /api/measurements
-//      • Returns up to the 500 most recent measurements.
-//      • Used by the Dashboard to draw tables and charts.
-//      • No filtering performed here; frontend filters by date.
-//
-//   GET /api/measurements/weekly
-//      • Computes analytics for the *last 7 days*:
-//           - Average HR / SpO₂
-//           - Min/Max HR
-//           - Count per day
-//           - Active device count
-//      • Returns:
-//          {
-//            averageHeartRate,
-//            averageSpO2,
-//            totalMeasurements,
-//            activeDevices,
-//            daily: [
-//              {
-//                date: "2025-12-01",
-//                avgHeartRate,
-//                avgSpO2,
-//                minHeartRate,
-//                maxHeartRate,
-//                count
-//              },
-//              ...
-//            ]
-//          }
-//      • Used by Weekly Summary page.
-//
-//  Notes:
-//    • Measurement documents store:
-//        { deviceId, heartRate, spo2, takenAt }
-//    • takenAt defaults to server timestamp if omitted.
-//    • Weekly aggregation uses MongoDB $group + $dateToString.
 // -------------------------------------------------------------
 
 const express = require('express');
 const router = express.Router();
 
 const Measurement = require('../models/Measurement');
-const Device = require('../models/Device');
+const Device = require('../models/Device'); // (currently unused, but fine)
 const deviceApiKey = require('../middleware/deviceApiKey');
 
 // -------------------------------------------------------------------
@@ -72,25 +19,44 @@ const deviceApiKey = require('../middleware/deviceApiKey');
 // Body:
 //  {
 //    "deviceId": "PHOTON_123ABC",
-//    "heartRate": 75,
-//    "spo2": 98,
+//    "heartRate": 75.0,        // can be float or string "75.0"
+//    "spo2": 98.5,             // can be float or string "98.5"
 //    "takenAt": "2025-12-06T00:36:19.006Z"   // optional, defaults to now
 //  }
 // -------------------------------------------------------------------
 router.post('/device', deviceApiKey, async (req, res, next) => {
   try {
-    const { deviceId, heartRate, spo2, takenAt } = req.body;
+    const { deviceId, heartRate, spo2, takenAt } = req.body || {};
 
-    if (!deviceId || !heartRate || !spo2) {
+    // Basic presence checks (allow 0 but not null/undefined)
+    if (deviceId == null) {
+      return res.status(400).json({ error: 'deviceId is required' });
+    }
+    if (heartRate == null) {
+      return res.status(400).json({ error: 'heartRate is required' });
+    }
+    if (spo2 == null) {
+      return res.status(400).json({ error: 'spo2 is required' });
+    }
+
+    // Convert to numbers in case they arrive as strings like "75.0"
+    const hrNum = Number(heartRate);
+    const spo2Num = Number(spo2);
+
+    if (!Number.isFinite(hrNum) || !Number.isFinite(spo2Num)) {
       return res.status(400).json({
-        error: 'deviceId, heartRate, and spo2 are required'
+        error: 'heartRate and spo2 must be numeric values'
       });
     }
 
+    // Round to nearest integer for storage
+    const hrRounded = Math.round(hrNum);
+    const spo2Rounded = Math.round(spo2Num);
+
     const measurement = await Measurement.create({
-      deviceId,
-      heartRate,
-      spo2,
+      deviceId: String(deviceId),
+      heartRate: hrRounded,
+      spo2: spo2Rounded,
       takenAt: takenAt ? new Date(takenAt) : new Date()
     });
 
@@ -127,17 +93,7 @@ router.get('/', async (req, res, next) => {
 //   "averageSpO2": 98,
 //   "totalMeasurements": 42,
 //   "activeDevices": 2,
-//   "daily": [
-//     {
-//       "date": "2025-12-01",
-//       "avgHeartRate": 70,
-//       "avgSpO2": 98,
-//       "minHeartRate": 60,
-//       "maxHeartRate": 85,
-//       "count": 8
-//     },
-//     ...
-//   ]
+//   "daily": [ ... ]
 // }
 // -------------------------------------------------------------------
 router.get('/weekly', async (req, res, next) => {
