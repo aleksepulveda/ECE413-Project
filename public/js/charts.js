@@ -220,8 +220,8 @@ class ChartsManager {
                             display: true,
                             text: 'Blood Oxygen (%)'
                         },
-                        min: 90,
-                        max: 100,
+                        suggestedMin: 80,   // let Chart.js auto-scale, but bias toward 80–100
+                        suggestedMax: 100,
                         grid: {
                             color: '#f0f0f0'
                         }
@@ -370,8 +370,8 @@ class ChartsManager {
                             display: true,
                             text: 'Blood Oxygen (%)'
                         },
-                        min: 90,
-                        max: 100,
+                        suggestedMin: 80,
+                        suggestedMax: 100,
                         grid: {
                             drawOnChartArea: false
                         }
@@ -393,15 +393,25 @@ class ChartsManager {
     }
 
     updateOxygenChart(data) {
-        if (!this.charts.oxygen) return;
+        const chart = this.charts.oxygen;
+        if (!chart) return;
 
-        const labels = data.map(item => this.formatTime(new Date(item.timestamp)));
-        const oxygenLevels = data.map(item => item.bloodOxygen);
+        // Use the same timestamp field you’re using for HR in dashboard.js
+        const labels = data.map(item =>
+            this.formatTime(new Date(item.timestamp || item.takenAt || item.createdAt))
+        );
 
-        this.charts.oxygen.data.labels = labels;
-        this.charts.oxygen.data.datasets[0].data = oxygenLevels;
-        this.charts.oxygen.update('none');
+        const oxygenLevels = data.map(item => {
+            if (typeof item.spo2 === 'number') return item.spo2;
+            if (typeof item.bloodOxygen === 'number') return item.bloodOxygen;
+            return null;
+        });
+
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = oxygenLevels;
+        chart.update('none');
     }
+
 
     updateWeeklySummaryChart(data) {
         if (!this.charts.weeklySummary) return;
