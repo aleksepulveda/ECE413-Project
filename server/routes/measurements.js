@@ -79,55 +79,45 @@ function extractHeartRateAndSpo2(body) {
 //  }
 // -------------------------------------------------------------------
 router.post('/device', deviceApiKey, async (req, res, next) => {
-  try {
-    const body = req.body || {};
+    try {
+        // 💡 CHANGE 1: Extract the new field and remove old ones
+        const { deviceId, healthDataString, takenAt } = req.body; 
 
-    // Device identifier:
-    // Prefer explicit deviceId, otherwise fall back to coreid.
-    let { deviceId, takenAt } = body;
-    const { coreid, published_at } = body;
+        // 💡 CHANGE 2: Update validation for the new fields
+        if (!deviceId || !healthDataString) {
+            return res.status(400).json({
+                error: 'deviceId and healthDataString are required'
+            });
+        }
 
-    if (!deviceId && coreid) {
-      deviceId = coreid; // allow Photon coreid as deviceId
+        // 💡 NEW LOGIC: Split and parse the string here (where it is reliable)
+        const [hrStr, spo2Str] = healthDataString.split(',');
+
+        const heartRate = parseFloat(hrStr);
+        const spo2 = parseFloat(spo2Str);
+
+        // 💡 ADDED ROBUST VALIDATION for the parsed numbers
+        // Ensures both are valid numbers and not zero/negative
+        if (isNaN(heartRate)|| isNaN(spo2) || heartRate <= 0 || spo2 <= 0) {
+             return res.status(400).json({ 
+                error: "Invalid HR (${hrStr}) or SpO2 (${spo2Str}) values provided"
+             });
+        }
+
+        // 💡 CHANGE 3: Use the parsed numbers in the Mongoose call
+        const measurement = await Measurement.create({
+            deviceId,
+            heartRate, // Uses the parsed float
+            spo2,      // Uses the parsed float
+            takenAt: takenAt ? new Date(takenAt) : new Date()
+        });
+
+        return res.status(201).json(measurement);
+    } catch (err) {
+        next(err);
     }
-
-    if (!deviceId) {
-      return res.status(400).json({ error: 'deviceId (or coreid) is required' });
-    }
-
-    // Try to extract numeric HR / SpO2
-    const { hrNum, spo2Num } = extractHeartRateAndSpo2(body);
-
-    if (!Number.isFinite(hrNum) || !Number.isFinite(spo2Num)) {
-      return res.status(400).json({
-        error: 'heartRate and spo2 must be numeric values (or parsable from data "HR,SPO2")'
-      });
-    }
-
-    // Round to nearest integer for storage
-    const hrRounded = Math.round(hrNum);
-    const spo2Rounded = Math.round(spo2Num);
-
-    // Choose timestamp: explicit takenAt > published_at > now
-    let effectiveTakenAt = new Date();
-    if (takenAt) {
-      effectiveTakenAt = new Date(takenAt);
-    } else if (published_at) {
-      effectiveTakenAt = new Date(published_at);
-    }
-
-    const measurement = await Measurement.create({
-      deviceId: String(deviceId),
-      heartRate: hrRounded,
-      spo2: spo2Rounded,
-      takenAt: effectiveTakenAt
-    });
-
-    return res.status(201).json(measurement);
-  } catch (err) {
-    next(err);
-  }
 });
+
 
 // -------------------------------------------------------------------
 // GET /api/measurements
