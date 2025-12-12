@@ -310,7 +310,7 @@
             flex-direction: column;
             gap: 10px;
         ">
-            <div style="background: #e9ecef; padding: 10px; border-radius: 10px; align-self: flex-start; max-width: 80%;">
+            <div id="ai-welcome-msg" style="background: #e9ecef; padding: 10px; border-radius: 10px; align-self: flex-start; max-width: 80%;">
                 Hello! I can analyze your recent heart data. Ask me anything!
             </div>
         </div>
@@ -336,6 +336,23 @@
     </div>
 
     <script>
+        // --- 1. SETUP ON LOAD ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // FIX NAME: Try to get name from common storage keys
+            // You might need to check your 'login.js' to see exactly what key you used.
+            const storedName = localStorage.getItem('name') || 
+                               localStorage.getItem('userName') || 
+                               localStorage.getItem('user_name');
+            
+            // If we found a name, update the welcome message
+            if (storedName) {
+                const welcomeDiv = document.getElementById('ai-welcome-msg');
+                if (welcomeDiv) {
+                    welcomeDiv.textContent = `Hello ${storedName}! I can analyze your recent heart data. Ask me anything!`;
+                }
+            }
+        });
+
         // Toggle Window Visibility
         document.getElementById('ai-chat-toggle').addEventListener('click', () => {
             const win = document.getElementById('ai-chat-window');
@@ -354,25 +371,29 @@
             
             if (!question) return;
 
-            // 1. Add User Message to UI
+            // Add User Message to UI
             appendMessage(question, 'user');
             input.value = '';
-            input.disabled = true; // Disable input while waiting
+            input.disabled = true; 
 
-            // 2. Add "Typing..." indicator
+            // Add "Thinking..." indicator
             const loadingId = appendMessage('Thinking...', 'ai', true);
 
             try {
-                // Get token from localStorage (uses logic from your auth.js)
-                const token = localStorage.getItem('token'); 
+                // --- FIX TOKEN ERROR ---
+                // We check multiple common keys because we aren't sure which one auth.js used
+                const token = localStorage.getItem('token') || 
+                              localStorage.getItem('authToken') || 
+                              localStorage.getItem('jwt'); 
 
                 if (!token) {
                     removeMessage(loadingId);
-                    appendMessage("Error: You are not logged in.", 'ai');
+                    appendMessage("Error: You are not logged in (Token missing).", 'ai');
+                    console.error("Debug: Checked 'token', 'authToken', and 'jwt' in localStorage but all were null.");
                     return;
                 }
 
-                // 3. Send to Backend
+                // Send to Backend
                 const res = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 
@@ -384,7 +405,6 @@
 
                 const data = await res.json();
                 
-                // 4. Show Response
                 removeMessage(loadingId);
                 if (data.error) {
                     appendMessage("Error: " + data.error, 'ai');
@@ -426,7 +446,7 @@
             
             const container = document.getElementById('ai-messages');
             container.appendChild(div);
-            container.scrollTop = container.scrollHeight; // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight; 
             return div.id;
         }
 
