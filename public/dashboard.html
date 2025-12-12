@@ -270,7 +270,7 @@
         bottom: 20px;
         right: 20px;
         background-color: #007bff;
-        color: white;
+        color: black;
         border: none;
         border-radius: 50%;
         width: 60px;
@@ -326,7 +326,7 @@
             <button onclick="sendAiMessage()" style="
                 margin-left: 10px;
                 background: #007bff;
-                color: white;
+                color: black;
                 border: none;
                 padding: 0 15px;
                 border-radius: 5px;
@@ -338,15 +338,23 @@
     <script>
         // --- 1. SETUP ON LOAD ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Attempt to find username
-            const storedName = localStorage.getItem('name') || 
-                               localStorage.getItem('userName') || 
-                               localStorage.getItem('user_name') ||
-                               "User";
-            
+            let userName = "User";
+
+            // FIX: Parse the user object from Session Storage
+            const userJson = sessionStorage.getItem('heartTrackUser');
+            if (userJson) {
+                try {
+                    const user = JSON.parse(userJson);
+                    if (user.name) userName = user.name;
+                } catch (e) {
+                    console.error("Could not parse user data", e);
+                }
+            }
+
+            // Update the welcome message
             const welcomeDiv = document.getElementById('ai-welcome-msg');
             if (welcomeDiv) {
-                welcomeDiv.textContent = `Hello ${storedName}! I can analyze your recent heart data. Ask me anything!`;
+                welcomeDiv.textContent = `Hello ${userName}! I can analyze your recent heart data. Ask me anything!`;
             }
         });
 
@@ -360,28 +368,6 @@
         document.getElementById('ai-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendAiMessage();
         });
-
-        // --- HELPER: FIND THE HIDDEN TOKEN ---
-        function findAuthToken() {
-            // 1. Try standard keys first
-            let token = localStorage.getItem('token') || 
-                        localStorage.getItem('authToken') || 
-                        localStorage.getItem('jwt') ||
-                        sessionStorage.getItem('token');
-
-            if (token) return token;
-
-            // 2. If not found, scan ALL keys for a JWT (tokens always start with "eyJ")
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                const value = localStorage.getItem(key);
-                if (value && value.startsWith('eyJ')) {
-                    console.log(`Auto-detected token in key: ${key}`);
-                    return value;
-                }
-            }
-            return null;
-        }
 
         async function sendAiMessage() {
             const input = document.getElementById('ai-input');
@@ -398,14 +384,14 @@
             const loadingId = appendMessage('Thinking...', 'ai', true);
 
             try {
-                // !!! USE THE AUTO-FINDER !!!
-                const token = findAuthToken();
+                // --- CRITICAL FIX ---
+                // We specifically grab the key shown in your screenshot
+                const token = sessionStorage.getItem('heartTrackToken');
 
                 if (!token) {
                     removeMessage(loadingId);
-                    appendMessage("Error: You are not logged in. (Please log in again)", 'ai');
-                    // Debugging help for you:
-                    console.error("Available LocalStorage Keys:", Object.keys(localStorage));
+                    appendMessage("Error: You are not logged in.", 'ai');
+                    console.error("Debug: 'heartTrackToken' is missing from Session Storage.");
                     return;
                 }
 
