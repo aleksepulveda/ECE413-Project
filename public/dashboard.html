@@ -296,7 +296,7 @@
         flex-direction: column;
         font-family: sans-serif;
     ">
-        <div style="background: #007bff; color: white; padding: 15px; border-radius: 10px 10px 0 0; font-weight: bold;">
+        <div style="background: #007bff; color: black; padding: 15px; border-radius: 10px 10px 0 0; font-weight: bold;">
             ❤️ Health Assistant
             <span onclick="document.getElementById('ai-chat-window').style.display='none'" style="float: right; cursor: pointer;">✖</span>
         </div>
@@ -338,18 +338,15 @@
     <script>
         // --- 1. SETUP ON LOAD ---
         document.addEventListener('DOMContentLoaded', () => {
-            // FIX NAME: Try to get name from common storage keys
-            // You might need to check your 'login.js' to see exactly what key you used.
+            // Attempt to find username
             const storedName = localStorage.getItem('name') || 
                                localStorage.getItem('userName') || 
-                               localStorage.getItem('user_name');
+                               localStorage.getItem('user_name') ||
+                               "User";
             
-            // If we found a name, update the welcome message
-            if (storedName) {
-                const welcomeDiv = document.getElementById('ai-welcome-msg');
-                if (welcomeDiv) {
-                    welcomeDiv.textContent = `Hello ${storedName}! I can analyze your recent heart data. Ask me anything!`;
-                }
+            const welcomeDiv = document.getElementById('ai-welcome-msg');
+            if (welcomeDiv) {
+                welcomeDiv.textContent = `Hello ${storedName}! I can analyze your recent heart data. Ask me anything!`;
             }
         });
 
@@ -364,9 +361,30 @@
             if (e.key === 'Enter') sendAiMessage();
         });
 
+        // --- HELPER: FIND THE HIDDEN TOKEN ---
+        function findAuthToken() {
+            // 1. Try standard keys first
+            let token = localStorage.getItem('token') || 
+                        localStorage.getItem('authToken') || 
+                        localStorage.getItem('jwt') ||
+                        sessionStorage.getItem('token');
+
+            if (token) return token;
+
+            // 2. If not found, scan ALL keys for a JWT (tokens always start with "eyJ")
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                if (value && value.startsWith('eyJ')) {
+                    console.log(`Auto-detected token in key: ${key}`);
+                    return value;
+                }
+            }
+            return null;
+        }
+
         async function sendAiMessage() {
             const input = document.getElementById('ai-input');
-            const messagesDiv = document.getElementById('ai-messages');
             const question = input.value.trim();
             
             if (!question) return;
@@ -380,16 +398,14 @@
             const loadingId = appendMessage('Thinking...', 'ai', true);
 
             try {
-                // --- FIX TOKEN ERROR ---
-                // We check multiple common keys because we aren't sure which one auth.js used
-                const token = localStorage.getItem('token') || 
-                              localStorage.getItem('authToken') || 
-                              localStorage.getItem('jwt'); 
+                // !!! USE THE AUTO-FINDER !!!
+                const token = findAuthToken();
 
                 if (!token) {
                     removeMessage(loadingId);
-                    appendMessage("Error: You are not logged in (Token missing).", 'ai');
-                    console.error("Debug: Checked 'token', 'authToken', and 'jwt' in localStorage but all were null.");
+                    appendMessage("Error: You are not logged in. (Please log in again)", 'ai');
+                    // Debugging help for you:
+                    console.error("Available LocalStorage Keys:", Object.keys(localStorage));
                     return;
                 }
 
