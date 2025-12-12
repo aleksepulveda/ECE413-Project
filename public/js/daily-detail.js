@@ -45,8 +45,18 @@
     });
   }
 
-  // Convert Date → "YYYY-MM-DD" (local time)
+  // Convert Date → "YYYY-MM-DD" (local time) for the <input type="date">
   function formatDateForInput(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  // Convert Date → "YYYY-MM-DD" using LOCAL time (not UTC)
+  // Used when deciding whether a measurement belongs to the selected day.
+  function formatDateLocalYMD(date) {
     const d = date instanceof Date ? date : new Date(date);
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -436,15 +446,17 @@
     console.log("Daily Detail: loading data for", dateStr);
 
     try {
-      // Same approach as weekly-summary.js
       const allMeasurements = await apiManager.getMeasurements({ limit: 500 });
 
-      // Keep only measurements whose date part matches dateStr
+      // Compare using LOCAL date (fixes UTC vs local mismatch)
       const filtered = allMeasurements.filter((m) => {
-        const d = new Date(m.takenAt || m.createdAt);
-        const key = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+        const key = formatDateLocalYMD(m.takenAt || m.createdAt);
         return key === dateStr;
       });
+
+      console.log(
+        `Daily Detail: ${filtered.length} measurements matched ${dateStr} (out of ${allMeasurements.length})`
+      );
 
       updateDailyUI(dateStr, filtered);
     } catch (err) {
