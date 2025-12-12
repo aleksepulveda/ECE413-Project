@@ -265,6 +265,177 @@
         </div>
     </footer>
 
+    <button id="ai-chat-toggle" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        cursor: pointer;
+        z-index: 1000;
+    ">💬</button>
+
+    <div id="ai-chat-window" style="
+        display: none;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 350px;
+        height: 500px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 1000;
+        flex-direction: column;
+        font-family: sans-serif;
+    ">
+        <div style="background: #007bff; color: white; padding: 15px; border-radius: 10px 10px 0 0; font-weight: bold;">
+            ❤️ Health Assistant
+            <span onclick="document.getElementById('ai-chat-window').style.display='none'" style="float: right; cursor: pointer;">✖</span>
+        </div>
+
+        <div id="ai-messages" style="
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        ">
+            <div style="background: #e9ecef; padding: 10px; border-radius: 10px; align-self: flex-start; max-width: 80%;">
+                Hello! I can analyze your recent heart data. Ask me anything!
+            </div>
+        </div>
+
+        <div style="padding: 10px; border-top: 1px solid #ddd; display: flex;">
+            <input type="text" id="ai-input" placeholder="Type a question..." style="
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                outline: none;
+            ">
+            <button onclick="sendAiMessage()" style="
+                margin-left: 10px;
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 0 15px;
+                border-radius: 5px;
+                cursor: pointer;
+            ">➤</button>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Window Visibility
+        document.getElementById('ai-chat-toggle').addEventListener('click', () => {
+            const win = document.getElementById('ai-chat-window');
+            win.style.display = win.style.display === 'none' || win.style.display === '' ? 'flex' : 'none';
+        });
+
+        // Handle "Enter" key
+        document.getElementById('ai-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendAiMessage();
+        });
+
+        async function sendAiMessage() {
+            const input = document.getElementById('ai-input');
+            const messagesDiv = document.getElementById('ai-messages');
+            const question = input.value.trim();
+            
+            if (!question) return;
+
+            // 1. Add User Message to UI
+            appendMessage(question, 'user');
+            input.value = '';
+            input.disabled = true; // Disable input while waiting
+
+            // 2. Add "Typing..." indicator
+            const loadingId = appendMessage('Thinking...', 'ai', true);
+
+            try {
+                // Get token from localStorage (uses logic from your auth.js)
+                const token = localStorage.getItem('token'); 
+
+                if (!token) {
+                    removeMessage(loadingId);
+                    appendMessage("Error: You are not logged in.", 'ai');
+                    return;
+                }
+
+                // 3. Send to Backend
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await res.json();
+                
+                // 4. Show Response
+                removeMessage(loadingId);
+                if (data.error) {
+                    appendMessage("Error: " + data.error, 'ai');
+                } else {
+                    appendMessage(data.answer, 'ai');
+                }
+
+            } catch (err) {
+                removeMessage(loadingId);
+                appendMessage("Network Error: Could not reach server.", 'ai');
+                console.error(err);
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Helper: Add message to chat window
+        function appendMessage(text, sender, isTemp = false) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.padding = '10px';
+            div.style.borderRadius = '10px';
+            div.style.maxWidth = '80%';
+            div.style.wordWrap = 'break-word';
+            div.style.marginBottom = '5px';
+            
+            if (sender === 'user') {
+                div.style.background = '#007bff';
+                div.style.color = 'white';
+                div.style.alignSelf = 'flex-end';
+            } else {
+                div.style.background = '#e9ecef';
+                div.style.color = 'black';
+                div.style.alignSelf = 'flex-start';
+            }
+
+            if (isTemp) div.id = 'temp-loading-msg';
+            
+            const container = document.getElementById('ai-messages');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight; // Auto-scroll to bottom
+            return div.id;
+        }
+
+        function removeMessage(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+    </script>
+
     <!-- Scripts (Order matters: auth → api → chart helpers → page script) -->
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
