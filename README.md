@@ -53,7 +53,8 @@ HeartTrack/
 │   └── routes/
 │       ├── auth.js           # Registration & login
 │       ├── devices.js        # Device CRUD
-│       └── measurements.js   # Measurement ingestion & summaries
+│       ├── measurements.js   # Measurement ingestion & summaries
+│       └── users.js          # User status & updates
 │
 └── .env                      # Environment variables (local only)
 ```
