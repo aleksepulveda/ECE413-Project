@@ -20,7 +20,7 @@ HeartTrack/
 ├── README.md                 # Project documentation
 ├── package.json              # Node.js dependencies
 ├── .gitignore                # Git ignore rules
-│==
+│
 ├── iot/firmware/             # [add info here]
 │   ├── EEPROM-Checksum.h     # [add info here]
 │   ├── C EEPROM-Util.h       # [add info here]
@@ -30,7 +30,7 @@ HeartTrack/
 │   ├── HeartSpo2.ino         # [add info here]
 │   ├── MAX30105.cpp          # [add info here]
 │   └── MAX30105.h            # [add info here]
-│==
+│
 ├── public/                   # Frontend web application
 │   ├── index.html            # Team introduction & project overview
 │   ├── login.html            # Login and registration
