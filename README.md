@@ -20,7 +20,17 @@ HeartTrack/
 ├── README.md                 # Project documentation
 ├── package.json              # Node.js dependencies
 ├── .gitignore                # Git ignore rules
-│
+│==
+├── iot/firmware/             # [add info here]
+│   ├── EEPROM-Checksum.h     # [add info here]
+│   ├── C EEPROM-Util.h       # [add info here]
+│   ├── C EEPROM-Vars.h       # [add info here]
+│   ├── C EEPROM.h            # [add info here]
+│   ├── HeartSpo2.cpp         # [add info here]
+│   ├── HeartSpo2.ino         # [add info here]
+│   ├── MAX30105.cpp          # [add info here]
+│   └── MAX30105.h            # [add info here]
+│==
 ├── public/                   # Frontend web application
 │   ├── index.html            # Team introduction & project overview
 │   ├── login.html            # Login and registration
@@ -32,7 +42,27 @@ HeartTrack/
 │   ├── reference.html        # Third-party APIs & libraries
 │   │
 │   ├── css/                  # Stylesheets
+│   │   ├── charts.css        # Styling for displayed charts
+│   │   ├── main.css          # Styling for common page elements
+│   │   └── responsive.css    # Styling for responsive web design 
+│   │
+│   ├── images/               # Static images the web app pulls from
+│   │   ├── alek.jpg          # Headshot photo of Alek Sepulveda
+│   │   ├── darryl.jpg        # Headshot photo of Darryl Mercado
+│   │   └── elias.jpg         # Headshot photo of Elias Vazquez
+│   │
 │   └── js/                   # Client-side JavaScript logic
+│       ├── api.js            # API manager ensuring calls are proper (JWT, erros, helpers)
+│       ├── auth.js           # Authentication manager
+│       ├── chart.js          # Thrid-party Library (implemented locally instead of CDN due to errors)
+│       ├── charts.js         # Chart configuration and management
+│       ├── daily-detail.js   # Script for updating daily-detail.html page
+│       ├── dashboard.js      # Script for updating dashboard.html page
+│       ├── devices.js        # Script for updating device-managment.html page
+│       ├── main.js           # Script for updating all common behhaviors across html pages
+│       ├── settings.js       # Script for updating settings.html page
+│       └── weekly-summary.js # Script for updating weekly-summary.html page
+│   
 │
 ├── server/                   # Backend (Node.js + Express)
 │   ├── server.js             # Server entry point
@@ -52,7 +82,8 @@ HeartTrack/
 │   │
 │   └── routes/
 │       ├── auth.js           # Registration & login
-│       ├── devices.js        # Device CRUD
+│       ├── chat.js           # AI chat route & RAG implementation
+│       ├── devices.js        # Device CRUD routes
 │       ├── measurements.js   # Measurement ingestion & summaries
 │       └── users.js          # User status & updates
 │
@@ -239,9 +270,6 @@ A full list is provided in reference.html, including:
 * Open-source CSS snippets
 * Reusable JavaScript utilities from class materials
 
-### Notes for ECE 513 Students (if applicable)
-If physician-role login credentials are required, they should be documented here.
-
 ### Conclusion
 This repository contains the complete implementation of the Heart Track system, including:
 * Front-end web application
@@ -252,5 +280,3 @@ This repository contains the complete implementation of the Heart Track system, 
 * Daily and weekly visualization views
 * Responsive design
 * Full documentation (this README.md)
-
-All course requirements are satisfied.
