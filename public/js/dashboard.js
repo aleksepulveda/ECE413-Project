@@ -157,25 +157,116 @@
     }
 
     function updateRecentTable(measurements) {
+      // States stored in the function itself
+      if (!updateRecentTable._state) {
+        updateRecentTable._state = {
+          pageSize: 10,
+          currentPage: 1,
+          measurements: [],
+          controlsInitialized: false,
+          prevBtn: null,
+          nextBtn: null,
+          infoSpan: null
+        };
+      }
+
+      const state = updateRecentTable._state;
+
+      // If caller passed an array, treat it as "new data" and reset to page 1
+      if (Array.isArray(measurements)) {
+        state.measurements = measurements;
+        state.currentPage = 1;
+      }
+
+      const all = state.measurements || [];
+      const total = all.length;
+
+      // Clear table body
       recentTableBody.innerHTML = '';
 
-      if (!measurements || measurements.length === 0) {
+      // --- create pagination controls once, just under the table ---
+      if (!state.controlsInitialized && recentTableBody.parentElement) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-pagination';
+
+        const prevBtn = document.createElement('button');
+        prevBtn.type = 'button';
+        prevBtn.textContent = '‹';
+        prevBtn.className = 'table-pagination__btn';
+
+        const infoSpan = document.createElement('span');
+        infoSpan.className = 'table-pagination__info';
+
+        const nextBtn = document.createElement('button');
+        nextBtn.type = 'button';
+        nextBtn.textContent = '›';
+        nextBtn.className = 'table-pagination__btn';
+
+        wrapper.appendChild(prevBtn);
+        wrapper.appendChild(infoSpan);
+        wrapper.appendChild(nextBtn);
+
+        // put controls after the table
+        const table = recentTableBody.parentElement;        // <table>
+        table.parentElement.appendChild(wrapper);           // usually the card section
+
+        // wire events
+        prevBtn.addEventListener('click', () => {
+          if (state.currentPage > 1) {
+            state.currentPage--;
+            updateRecentTable(); // no new data, just re-render current cache
+          }
+        });
+
+        nextBtn.addEventListener('click', () => {
+          const totalPages = Math.max(1, Math.ceil(state.measurements.length / state.pageSize));
+          if (state.currentPage < totalPages) {
+            state.currentPage++;
+            updateRecentTable(); // re-render
+          }
+        });
+
+        state.prevBtn = prevBtn;
+        state.nextBtn = nextBtn;
+        state.infoSpan = infoSpan;
+        state.controlsInitialized = true;
+      }
+
+      // If no data, show the original "no measurements" row
+      if (!total) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
         cell.colSpan = 4;
         cell.textContent = 'No measurements for this range.';
         row.appendChild(cell);
         recentTableBody.appendChild(row);
+
+        if (state.infoSpan) {
+          state.infoSpan.textContent = 'Page 0 of 0';
+          state.prevBtn.disabled = true;
+          state.nextBtn.disabled = true;
+        }
         return;
       }
 
-      const sortedNewestFirst = [...measurements].sort((a, b) => {
+      // Sort newest → oldest (same as before)
+      const sortedNewestFirst = [...all].sort((a, b) => {
         const ta = getMeasurementTime(a) || 0;
         const tb = getMeasurementTime(b) || 0;
         return tb - ta;
       });
 
-      sortedNewestFirst.forEach((m) => {
+      const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+      if (state.currentPage > totalPages) {
+        state.currentPage = totalPages;
+      }
+
+      const startIndex = (state.currentPage - 1) * state.pageSize;
+      const endIndex = startIndex + state.pageSize;
+      const pageItems = sortedNewestFirst.slice(startIndex, endIndex);
+
+      // Render only this page's items
+      pageItems.forEach((m) => {
         const row = document.createElement('tr');
 
         const t = getMeasurementTime(m);
@@ -215,6 +306,13 @@
 
         recentTableBody.appendChild(row);
       });
+
+      // Update pagination controls
+      if (state.infoSpan) {
+        state.infoSpan.textContent = `Page ${state.currentPage} of ${totalPages}`;
+        state.prevBtn.disabled = state.currentPage <= 1;
+        state.nextBtn.disabled = state.currentPage >= totalPages;
+      }
     }
 
     function updateActiveDevicesCard() {
