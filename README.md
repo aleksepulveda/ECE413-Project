@@ -1,4 +1,4 @@
-# Heart Track - ECE 413/513 Final Project (2025)
+# Heart Track - ECE 413 Final Project (2025)
 
 ## Project Overview
 
