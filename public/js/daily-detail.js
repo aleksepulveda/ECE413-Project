@@ -306,14 +306,25 @@
     const minHrTimeEl = document.getElementById("minHrTime");
     const avgHrInfoEl = document.getElementById("avgHrInfo");
     const maxHrTimeEl = document.getElementById("maxHrTime");
-    const measurementsDevicesEl =
-      document.getElementById("measurementsDevices");
+    const measurementsDevicesEl = document.getElementById("measurementsDevices");
 
-    const tableBody = document.querySelector(
-      "#daily-measurements-table tbody"
-    );
+    const tableBody = document.querySelector("#daily-measurements-table tbody");
     const emptyMessage = document.getElementById("dailyEmptyMessage");
     const aboutTextEl = document.getElementById("dailySummaryText");
+
+    // Pagination state (static across calls)
+    if (!updateDailyUI._state) {
+      updateDailyUI._state = {
+        pageSize: 10,
+        currentPage: 1,
+        measurements: [],
+        controlsInitialized: false,
+        prevBtn: null,
+        nextBtn: null,
+        infoSpan: null,
+      };
+    }
+    const state = updateDailyUI._state;
 
     if (
       !minHrEl ||
@@ -323,17 +334,13 @@
       !tableBody ||
       !emptyMessage
     ) {
-      console.warn(
-        "Daily Detail: expected DOM elements not found; cannot update UI."
-      );
+      console.warn("Daily Detail: expected DOM elements not found; cannot update UI.");
       return;
     }
 
     // No measurements → reset UI, show empty state
     if (!measurements || measurements.length === 0) {
-      minHrEl.textContent = "--";
-      avgHrEl.textContent = "--";
-      maxHrEl.textContent = "--";
+      minHrEl.textContent = avgHrEl.textContent = maxHrEl.textContent = "--";
       countEl.textContent = "0";
 
       minHrTimeEl && (minHrTimeEl.textContent = "--");
@@ -343,19 +350,15 @@
 
       tableBody.innerHTML = "";
       emptyMessage.style.display = "block";
-
-      if (aboutTextEl) {
+      if (aboutTextEl)
         aboutTextEl.textContent =
           "No measurements were found for this date. Try another day or confirm your device is sending data.";
-      }
-
       renderDailyChart([]);
       return;
     }
 
     // We have data
     emptyMessage.style.display = "none";
-
     const sorted = [...measurements].sort(
       (a, b) => new Date(a.takenAt) - new Date(b.takenAt)
     );
@@ -363,14 +366,11 @@
     const heartRates = sorted.map((m) => m.heartRate);
     const minHr = Math.min(...heartRates);
     const maxHr = Math.max(...heartRates);
-    const avgHr =
-      heartRates.reduce((sum, v) => sum + v, 0) / heartRates.length;
-
+    const avgHr = heartRates.reduce((s, v) => s + v, 0) / heartRates.length;
     const minIdx = heartRates.indexOf(minHr);
     const maxIdx = heartRates.indexOf(maxHr);
     const minTime = sorted[minIdx].takenAt;
     const maxTime = sorted[maxIdx].takenAt;
-
     const deviceIds = new Set(sorted.map((m) => m.deviceId));
 
     // Stat cards
@@ -378,50 +378,82 @@
     avgHrEl.textContent = `${Math.round(avgHr)}`;
     maxHrEl.textContent = `${maxHr}`;
     countEl.textContent = `${sorted.length}`;
-
-    minHrTimeEl &&
-      (minHrTimeEl.textContent = `Lowest at ${formatTime(minTime)}`);
-    maxHrTimeEl &&
-      (maxHrTimeEl.textContent = `Highest at ${formatTime(maxTime)}`);
-    avgHrInfoEl &&
-      (avgHrInfoEl.textContent = `Across ${sorted.length} measurements`);
+    minHrTimeEl && (minHrTimeEl.textContent = `Lowest at ${formatTime(minTime)}`);
+    maxHrTimeEl && (maxHrTimeEl.textContent = `Highest at ${formatTime(maxTime)}`);
+    avgHrInfoEl && (avgHrInfoEl.textContent = `Across ${sorted.length} measurements`);
     measurementsDevicesEl &&
       (measurementsDevicesEl.textContent = `${sorted.length} measurements from ${deviceIds.size} device(s)`);
-
     if (aboutTextEl) {
       aboutTextEl.textContent = `Showing ${sorted.length} measurements on ${formatLongDate(
         new Date(dateStr + "T00:00:00")
       )}.`;
     }
 
-    // Table
-    tableBody.innerHTML = "";
-    sorted.forEach((m) => {
-      const row = document.createElement("tr");
+    // --- Pagination setup ---
+    state.measurements = sorted;
+    state.currentPage = 1;
 
-      const timeTd = document.createElement("td");
-      timeTd.textContent = formatTime(m.takenAt);
+    if (!state.controlsInitialized && tableBody.parentElement) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-pagination";
+      const prevBtn = document.createElement("button");
+      prevBtn.textContent = "‹";
+      const infoSpan = document.createElement("span");
+      const nextBtn = document.createElement("button");
+      nextBtn.textContent = "›";
+      [prevBtn, nextBtn].forEach((b) => (b.className = "table-pagination__btn"));
+      infoSpan.className = "table-pagination__info";
+      wrapper.append(prevBtn, infoSpan, nextBtn);
+      tableBody.parentElement.append(wrapper);
 
-      const deviceTd = document.createElement("td");
-      deviceTd.textContent = m.deviceId;
+      prevBtn.onclick = () => {
+        if (state.currentPage > 1) {
+          state.currentPage--;
+          renderPage();
+        }
+      };
+      nextBtn.onclick = () => {
+        const totalPages = Math.ceil(state.measurements.length / state.pageSize);
+        if (state.currentPage < totalPages) {
+          state.currentPage++;
+          renderPage();
+        }
+      };
+      state.prevBtn = prevBtn;
+      state.nextBtn = nextBtn;
+      state.infoSpan = infoSpan;
+      state.controlsInitialized = true;
+    }
 
-      const hrTd = document.createElement("td");
-      hrTd.textContent = m.heartRate;
-
-      const spo2Td = document.createElement("td");
-      spo2Td.textContent = m.spo2;
-
-      row.appendChild(timeTd);
-      row.appendChild(deviceTd);
-      row.appendChild(hrTd);
-      row.appendChild(spo2Td);
-
-      tableBody.appendChild(row);
-    });
-
-    // Charts
+    renderPage();
     renderDailyChart(sorted);
+
+    function renderPage() {
+      tableBody.innerHTML = "";
+      const total = state.measurements.length;
+      const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+      const startIndex = (state.currentPage - 1) * state.pageSize;
+      const endIndex = startIndex + state.pageSize;
+      const pageItems = [...state.measurements]
+        .sort((a, b) => new Date(b.takenAt) - new Date(a.takenAt))
+        .slice(startIndex, endIndex);
+
+      pageItems.forEach((m) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${formatTime(m.takenAt)}</td>
+          <td>${m.deviceId}</td>
+          <td>${m.heartRate}</td>
+          <td>${m.spo2}</td>`;
+        tableBody.appendChild(row);
+      });
+
+      state.infoSpan.textContent = `Page ${state.currentPage} of ${totalPages}`;
+      state.prevBtn.disabled = state.currentPage <= 1;
+      state.nextBtn.disabled = state.currentPage >= totalPages;
+    }
   }
+
 
   // -------------------------------------------------------------------
   // Load all recent measurements, then filter for the chosen day
