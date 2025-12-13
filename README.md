@@ -212,8 +212,8 @@ Body:
 ```
 {
   "deviceId": "PHOTON_TEST_01",
-  "heartRate": 82,
-  "spo2": 98
+  "health-data": "82,98.03",
+  "timestamp": "2025-12-11T00:30:00.006Z"
 }
 ```
 
